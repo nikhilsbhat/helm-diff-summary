@@ -46,12 +46,12 @@ dockers_v2:
       - "latest"
       - "{{ .Tag }}-{{ .Env.GOVERSION }}"
     labels:
-      "org.opencontainers.image.description": "Foo bar"
+      "org.opencontainers.image.source": "https://github.com/nikhilsbhat/helm-diff-summary"
+      "org.opencontainers.image.description": "helm-diff-summary summarizes helm diff output into a concise Terraform-style deployment plan"
       "org.opencontainers.image.created": "{{.Date}}"
       "org.opencontainers.image.name": "{{.ProjectName}}"
       "org.opencontainers.image.revision": "{{.FullCommit}}"
       "org.opencontainers.image.version": "{{.Version}}"
-      "org.opencontainers.image.source": "{{.GitURL}}"
 
 archives:
   - formats:
