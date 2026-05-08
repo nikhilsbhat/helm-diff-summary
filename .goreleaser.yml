@@ -1,0 +1,72 @@
+# This is an example .goreleaser.yml file with some sane defaults.
+# Make sure to check the documentation at http://goreleaser.com
+before:
+  hooks:
+    # You may remove this if you don't use go modules.
+    - go mod tidy
+
+builds:
+  - env:
+      - CGO_ENABLED=0
+    flags:
+      - -trimpath
+    ldflags:
+      - -s -w
+        -X github.com/nikhilsbhat/helm-diff-summary/version.Version={{.Version}}
+        -X github.com/nikhilsbhat/helm-diff-summary/version.Env={{.Env.BUILD_ENVIRONMENT}}
+        -X github.com/nikhilsbhat/helm-diff-summary/version.BuildDate={{.Date}}
+        -X github.com/nikhilsbhat/helm-diff-summary/version.Revision={{.Commit}}
+        -X github.com/nikhilsbhat/helm-diff-summary/version.GoVersion={{.Env.GOVERSION}}
+        -X github.com/nikhilsbhat/helm-diff-summary/version.Platform={{ .Os }}/{{ .Arch }}
+    goos:
+      - linux
+      - darwin
+      - freebsd
+      - windows
+    goarch:
+      - amd64
+      - '386'
+      - arm
+      - arm64
+    binary: '{{ .ProjectName }}'
+
+archives:
+  - format: tar.gz
+    name_template: >-
+      {{- .ProjectName }}_
+      {{- .Version }}_
+      {{- .Os }}_
+      {{- if eq .Arch "amd64" }}x86_64
+      {{- else if eq .Arch "386" }}i386
+      {{- else }}{{ .Arch }}{{ end }}
+    files:
+      - plugin.yaml
+      - LICENSE
+      - completion.yaml
+      - install-binary.sh
+
+snapshot:
+  name_template: "{{ .ProjectName }}_{{ .Version }}_{{ .Runtime.Goos }}_{{ .Runtime.Goarch }}"
+
+checksum:
+  name_template: '{{ .ProjectName }}_{{ .Version }}_SHA256SUMS'
+  algorithm: sha256
+
+signs:
+  - artifacts: checksum
+    args:
+      - "--batch"
+      - "--local-user"
+      - "{{ .Env.GPG_FINGERPRINT }}" # set this environment variable for your signing key
+      - "--output"
+      - "${signature}"
+      - "--detach-sign"
+      - "${artifact}"
+
+changelog:
+  sort: asc
+  filters:
+    exclude:
+      - '^docs:'
+      - '^test:'
+

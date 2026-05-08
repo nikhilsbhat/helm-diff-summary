@@ -1,0 +1,38 @@
+
+# dropping IDE data's
+.vscode
+.idea
+
+.DS_Store
+
+# dropping some kubernetes metadata .kube
+.kube
+
+# dropping vendor and other data directories
+vendor/
+
+# dropping local built binaries
+helm-diff
+helm-diff_*
+
+# dropping the templates
+templates-latest/
+
+/dist
+
+# dropping all test results
+cover.out
+cover.html
+
+# dropping all local builds generated for testing
+bin/
+
+# dropping the artifacts that the plugin generates
+helm_diff_summary_*.json
+helm_diff_summary_*.yaml
+
+# dropping helm charts.
+example/chart/nginx
+
+# dropping binaries.
+helm-diff-summary
