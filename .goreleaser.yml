@@ -33,25 +33,41 @@ builds:
         goarch: arm
     binary: '{{ .ProjectName }}'
 
-dockers_v2:
-  - ids:
+dockers:
+  - use: buildx
+    ids:
       - helm-diff-summary
     dockerfile: Dockerfile
-    platforms:
-      - linux/amd64
-      - linux/arm64
-    images:
-      - "ghcr.io/nikhilsbhat/helm-diff-summary"
-    tags:
-      - "latest"
-      - "{{ .Tag }}-{{ .Env.GOVERSION }}"
-    labels:
-      "org.opencontainers.image.source": "https://github.com/nikhilsbhat/helm-diff-summary"
-      "org.opencontainers.image.description": "helm-diff-summary summarizes helm diff output into a concise Terraform-style deployment plan"
-      "org.opencontainers.image.created": "{{.Date}}"
-      "org.opencontainers.image.name": "{{.ProjectName}}"
-      "org.opencontainers.image.revision": "{{.FullCommit}}"
-      "org.opencontainers.image.version": "{{.Version}}"
+    skip_push: false
+    image_templates:
+      - "ghcr.io/nikhilsbhat/helm-diff-summary:latest"
+      - "ghcr.io/nikhilsbhat/helm-diff-summary:{{ .Tag }}-{{ .Env.GOVERSION }}"
+  - use: buildx
+    ids:
+      - helm-diff-summary
+    dockerfile: Dockerfile
+    skip_push: false
+    image_templates:
+      - "ghcr.io/nikhilsbhat/helm-diff-summary:{{ .Tag }}-amd64"
+    build_flag_templates:
+      - "--pull"
+      - "--platform=linux/amd64"
+  - use: buildx
+    ids:
+      - helm-diff-summary
+    dockerfile: Dockerfile
+    skip_push: false
+    image_templates:
+      - "ghcr.io/nikhilsbhat/helm-diff-summary:{{ .Tag }}-arm64"
+    build_flag_templates:
+      - "--pull"
+      - "--platform=linux/arm64"
+
+docker_manifests:
+  - name_template: "ghcr.io/nikhilsbhat/helm-diff-summary:{{ .Tag }}"
+    image_templates:
+      - "ghcr.io/nikhilsbhat/helm-diff-summary:{{ .Tag }}-amd64"
+      - "ghcr.io/nikhilsbhat/helm-diff-summary:{{ .Tag }}-arm64"
 
 archives:
   - formats:
