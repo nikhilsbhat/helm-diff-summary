@@ -36,38 +36,38 @@ builds:
 dockers:
   - use: buildx
     ids:
-      - gocd-cli
+      - helm-diff-summary
     dockerfile: Dockerfile
     skip_push: false
     image_templates:
-      - "ghcr.io/nikhilsbhat/gocd-cli:latest"
-      - "ghcr.io/nikhilsbhat/gocd-cli:{{ .Tag }}-{{ .Env.GOVERSION }}"
+      - "ghcr.io/nikhilsbhat/helm-diff-summary:latest"
+      - "ghcr.io/nikhilsbhat/helm-diff-summary:{{ .Tag }}-{{ .Env.GOVERSION }}"
   - use: buildx
     ids:
-      - gocd-cli
+      - helm-diff-summary
     dockerfile: Dockerfile
     skip_push: false
     image_templates:
-      - "ghcr.io/nikhilsbhat/gocd-cli:{{ .Tag }}-amd64"
+      - "ghcr.io/nikhilsbhat/helm-diff-summary:{{ .Tag }}-amd64"
     build_flag_templates:
       - "--pull"
       - "--platform=linux/amd64"
   - use: buildx
     ids:
-      - gocd-cli
+      - helm-diff-summary
     dockerfile: Dockerfile
     skip_push: false
     image_templates:
-      - "ghcr.io/nikhilsbhat/gocd-cli:{{ .Tag }}-arm64"
+      - "ghcr.io/nikhilsbhat/helm-diff-summary:{{ .Tag }}-arm64"
     build_flag_templates:
       - "--pull"
       - "--platform=linux/arm64"
 
 docker_manifests:
-  - name_template: "ghcr.io/nikhilsbhat/gocd-cli:{{ .Tag }}"
+  - name_template: "ghcr.io/nikhilsbhat/helm-diff-summary:{{ .Tag }}"
     image_templates:
-      - "ghcr.io/nikhilsbhat/gocd-cli:{{ .Tag }}-amd64"
-      - "ghcr.io/nikhilsbhat/gocd-cli:{{ .Tag }}-arm64"
+      - "ghcr.io/nikhilsbhat/helm-diff-summary:{{ .Tag }}-amd64"
+      - "ghcr.io/nikhilsbhat/helm-diff-summary:{{ .Tag }}-arm64"
 
 archives:
   - format: tar.gz
@@ -82,9 +82,9 @@ archives:
       - LICENSE
 
 brews:
-  - name: gocd-cli
-    homepage: https://github.com/nikhilsbhat/gocd-cli
-    url_template: "https://github.com/nikhilsbhat/gocd-cli/releases/download/{{ .Tag }}/{{ .ArtifactName }}"
+  - name: helm-diff-summary
+    homepage: https://github.com/nikhilsbhat/helm-diff-summary
+    url_template: "https://github.com/nikhilsbhat/helm-diff-summary/releases/download/{{ .Tag }}/{{ .ArtifactName }}"
     description: "A command-line tool for interacting with GoCD"
     license: "MIT"
     directory: Formula
@@ -104,8 +104,8 @@ brews:
           name: homebrew-stable
           branch: main
   - name: '{{ .ProjectName }}@{{ .Version }}'
-    homepage: https://github.com/nikhilsbhat/gocd-cli
-    url_template: "https://github.com/nikhilsbhat/gocd-cli/releases/download/{{ .Tag }}/{{ .ArtifactName }}"
+    homepage: https://github.com/nikhilsbhat/helm-diff-summary
+    url_template: "https://github.com/nikhilsbhat/helm-diff-summary/releases/download/{{ .Tag }}/{{ .ArtifactName }}"
     description: "A command-line tool for interacting with GoCD"
     license: "MIT"
     directory: Formula

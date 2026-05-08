@@ -1,5 +1,11 @@
 # helm-diff-summary
 
+[![Go Report Card](https://goreportcard.com/badge/github.com/nikhilsbhat/helm-diff-summary)](https://goreportcard.com/report/github.com/nikhilsbhat/helm-diff-summary)
+[![shields](https://img.shields.io/badge/license-MIT-blue)](https://github.com/nikhilsbhat/helm-diff-summary/blob/master/LICENSE)
+[![shields](https://godoc.org/github.com/nikhilsbhat/helm-diff-summary?status.svg)](https://godoc.org/github.com/nikhilsbhat/helm-diff-summary)
+[![shields](https://img.shields.io/github/v/tag/nikhilsbhat/helm-diff-summary.svg)](https://github.com/nikhilsbhat/helm-diff-summary/tags)
+[![shields](https://img.shields.io/github/downloads/nikhilsbhat/helm-diff-summary/total.svg)](https://github.com/nikhilsbhat/helm-diff-summary/releases)
+
 A Terraform-style summary tool for `helm diff`.
 
 `helm-diff-summary` converts noisy Helm diff output into a concise, human-readable table showing:
