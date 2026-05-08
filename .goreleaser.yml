@@ -33,6 +33,42 @@ builds:
         goarch: arm
     binary: '{{ .ProjectName }}'
 
+dockers:
+  - use: buildx
+    ids:
+      - gocd-cli
+    dockerfile: Dockerfile
+    skip_push: false
+    image_templates:
+      - "ghcr.io/nikhilsbhat/gocd-cli:latest"
+      - "ghcr.io/nikhilsbhat/gocd-cli:{{ .Tag }}-{{ .Env.GOVERSION }}"
+  - use: buildx
+    ids:
+      - gocd-cli
+    dockerfile: Dockerfile
+    skip_push: false
+    image_templates:
+      - "ghcr.io/nikhilsbhat/gocd-cli:{{ .Tag }}-amd64"
+    build_flag_templates:
+      - "--pull"
+      - "--platform=linux/amd64"
+  - use: buildx
+    ids:
+      - gocd-cli
+    dockerfile: Dockerfile
+    skip_push: false
+    image_templates:
+      - "ghcr.io/nikhilsbhat/gocd-cli:{{ .Tag }}-arm64"
+    build_flag_templates:
+      - "--pull"
+      - "--platform=linux/arm64"
+
+docker_manifests:
+  - name_template: "ghcr.io/nikhilsbhat/gocd-cli:{{ .Tag }}"
+    image_templates:
+      - "ghcr.io/nikhilsbhat/gocd-cli:{{ .Tag }}-amd64"
+      - "ghcr.io/nikhilsbhat/gocd-cli:{{ .Tag }}-arm64"
+
 archives:
   - format: tar.gz
     name_template: >-
