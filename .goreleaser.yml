@@ -33,44 +33,29 @@ builds:
         goarch: arm
     binary: '{{ .ProjectName }}'
 
-dockers:
-  - use: buildx
-    ids:
+dockers_v2:
+  - ids:
       - helm-diff-summary
     dockerfile: Dockerfile
-    skip_push: false
-    image_templates:
-      - "ghcr.io/nikhilsbhat/helm-diff-summary:latest"
-      - "ghcr.io/nikhilsbhat/helm-diff-summary:{{ .Tag }}-{{ .Env.GOVERSION }}"
-  - use: buildx
-    ids:
-      - helm-diff-summary
-    dockerfile: Dockerfile
-    skip_push: false
-    image_templates:
-      - "ghcr.io/nikhilsbhat/helm-diff-summary:{{ .Tag }}-amd64"
-    build_flag_templates:
-      - "--pull"
-      - "--platform=linux/amd64"
-  - use: buildx
-    ids:
-      - helm-diff-summary
-    dockerfile: Dockerfile
-    skip_push: false
-    image_templates:
-      - "ghcr.io/nikhilsbhat/helm-diff-summary:{{ .Tag }}-arm64"
-    build_flag_templates:
-      - "--pull"
-      - "--platform=linux/arm64"
-
-docker_manifests:
-  - name_template: "ghcr.io/nikhilsbhat/helm-diff-summary:{{ .Tag }}"
-    image_templates:
-      - "ghcr.io/nikhilsbhat/helm-diff-summary:{{ .Tag }}-amd64"
-      - "ghcr.io/nikhilsbhat/helm-diff-summary:{{ .Tag }}-arm64"
+    platforms:
+      - linux/amd64
+      - linux/arm64
+    images:
+      - "ghcr.io/nikhilsbhat/helm-diff-summary"
+    tags:
+      - "latest"
+      - "{{ .Tag }}-{{ .Env.GOVERSION }}"
+    labels:
+      "org.opencontainers.image.description": "Foo bar"
+      "org.opencontainers.image.created": "{{.Date}}"
+      "org.opencontainers.image.name": "{{.ProjectName}}"
+      "org.opencontainers.image.revision": "{{.FullCommit}}"
+      "org.opencontainers.image.version": "{{.Version}}"
+      "org.opencontainers.image.source": "{{.GitURL}}"
 
 archives:
-  - format: tar.gz
+  - formats:
+      - tar.gz
     name_template: >-
       {{- .ProjectName }}_
       {{- .Version }}_
@@ -81,15 +66,15 @@ archives:
     files:
       - LICENSE
 
-brews:
+homebrew_casks:
   - name: helm-diff-summary
     homepage: https://github.com/nikhilsbhat/helm-diff-summary
-    url_template: "https://github.com/nikhilsbhat/helm-diff-summary/releases/download/{{ .Tag }}/{{ .ArtifactName }}"
+    url:
+      template: "https://github.com/nikhilsbhat/helm-diff-summary/releases/download/{{ .Tag }}/{{ .ArtifactName }}"
     description: "A command-line tool for interacting with GoCD"
     license: "MIT"
     directory: Formula
     commit_msg_template: "Add brew formula for {{ .ProjectName }} latest"
-    download_strategy: CurlDownloadStrategy
     commit_author:
       name: nikhilsbhat
       email: nikhilsbhat93@gmail.com
@@ -105,12 +90,12 @@ brews:
           branch: main
   - name: '{{ .ProjectName }}@{{ .Version }}'
     homepage: https://github.com/nikhilsbhat/helm-diff-summary
-    url_template: "https://github.com/nikhilsbhat/helm-diff-summary/releases/download/{{ .Tag }}/{{ .ArtifactName }}"
+    url:
+      template: "https://github.com/nikhilsbhat/helm-diff-summary/releases/download/{{ .Tag }}/{{ .ArtifactName }}"
     description: "A command-line tool for interacting with GoCD"
     license: "MIT"
     directory: Formula
     commit_msg_template: "Add brew formula for {{ .ProjectName }} version {{ .Tag }}"
-    download_strategy: CurlDownloadStrategy
     commit_author:
       name: nikhilsbhat
       email: nikhilsbhat93@gmail.com
@@ -126,7 +111,7 @@ brews:
           branch: main
 
 snapshot:
-  name_template: "{{ .ProjectName }}_{{ .Version }}_{{ .Runtime.Goos }}_{{ .Runtime.Goarch }}"
+  version_template: "{{ .ProjectName }}_{{ .Version }}_{{ .Runtime.Goos }}_{{ .Runtime.Goarch }}"
 
 checksum:
   name_template: '{{ .ProjectName }}_{{ .Version }}_SHA256SUMS'
