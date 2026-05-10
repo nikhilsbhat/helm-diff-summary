@@ -66,15 +66,15 @@ archives:
     files:
       - LICENSE
 
-homebrew_casks:
+brews:
   - name: helm-diff-summary
     homepage: https://github.com/nikhilsbhat/helm-diff-summary
-    url:
-      template: "https://github.com/nikhilsbhat/helm-diff-summary/releases/download/{{ .Tag }}/{{ .ArtifactName }}"
-    description: "A command-line tool for interacting with GoCD"
+    url_template: "https://github.com/nikhilsbhat/helm-diff-summary/releases/download/{{ .Tag }}/{{ .ArtifactName }}"
+    description: "helm-diff-summary summarizes helm diff output into a concise Terraform-style deployment plan"
     license: "MIT"
     directory: Formula
     commit_msg_template: "Add brew formula for {{ .ProjectName }} latest"
+    download_strategy: CurlDownloadStrategy
     commit_author:
       name: nikhilsbhat
       email: nikhilsbhat93@gmail.com
@@ -90,12 +90,12 @@ homebrew_casks:
           branch: main
   - name: '{{ .ProjectName }}@{{ .Version }}'
     homepage: https://github.com/nikhilsbhat/helm-diff-summary
-    url:
-      template: "https://github.com/nikhilsbhat/helm-diff-summary/releases/download/{{ .Tag }}/{{ .ArtifactName }}"
-    description: "A command-line tool for interacting with GoCD"
+    url_template: "https://github.com/nikhilsbhat/helm-diff-summary/releases/download/{{ .Tag }}/{{ .ArtifactName }}"
+    description: "helm-diff-summary summarizes helm diff output into a concise Terraform-style deployment plan"
     license: "MIT"
     directory: Formula
     commit_msg_template: "Add brew formula for {{ .ProjectName }} version {{ .Tag }}"
+    download_strategy: CurlDownloadStrategy
     commit_author:
       name: nikhilsbhat
       email: nikhilsbhat93@gmail.com
