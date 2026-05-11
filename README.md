@@ -89,6 +89,10 @@ helm diff upgrade sample ./chart \
 Plan: 3 to create, 0 to update, 0 to delete.
 ```
 
+## Documentation
+
+Updated documentation on all available commands and flags can be found [here](https://github.com/nikhilsbhat/gocd-cli/blob/main/docs/doc/gocd-cli.md).
+
 ---
 
 # Installation

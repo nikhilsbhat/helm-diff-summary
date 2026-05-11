@@ -13,13 +13,16 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func getRootCommand() *cobra.Command {
+func GetRootCommand() *cobra.Command {
 	rootCommand := &cobra.Command{
 		Use:     "helm-diff-summary [command]",
 		Short:   "A Terraform-style summarizer for helm diff output",
-		Long:    `An utility that reads the helm diff plugin's output and summarizes its output in a Terraform style`,
+		Long:    `A utility that reads the helm diff plugin's output and summarizes its output in a Terraform style`,
 		PreRunE: setCLIClient,
 		Args:    cobra.NoArgs,
+		Example: `helm diff ... --output diff | helm-diff-summary
+helm diff upgrade sample ../helm-images/example/chart/sample  | ./helm-diff-summary -o yaml
+helm diff upgrade sample ../helm-images/example/chart/sample  | ./helm-diff-summary -o json`,
 		RunE: func(_ *cobra.Command, _ []string) error {
 			if cliCfg.showVersion {
 				versionInfo(os.Stdout)
@@ -61,14 +64,15 @@ func getRootCommand() *cobra.Command {
 			}
 
 			summary := renderer.BuildSummary(resources)
+			input := renderer.New(resources, summary, cliCfg.noColor)
 
 			switch cliCfg.outputFormat {
 			case "json", "j":
-				return renderer.RenderJSON(resources, summary)
+				return input.JSON()
 			case "yaml", "y":
-				return renderer.RenderYAML(resources, summary)
+				return input.YAML()
 			default:
-				if err = renderer.RenderTable(resources, summary); err != nil {
+				if err = input.Table(); err != nil {
 					return err
 				}
 			}

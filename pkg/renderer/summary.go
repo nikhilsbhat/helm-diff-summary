@@ -1,6 +1,8 @@
 package renderer
 
-import "github.com/nikhilsbhat/helm-diff-summary/pkg/parser"
+import (
+	"github.com/nikhilsbhat/helm-diff-summary/pkg/parser"
+)
 
 // Summary holds information on the diff summary.
 type Summary struct {

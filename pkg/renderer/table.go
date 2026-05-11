@@ -11,9 +11,24 @@ import (
 	"github.com/nikhilsbhat/helm-diff-summary/pkg/parser"
 )
 
-func RenderTable(resources []parser.ResourceDiff, summary Summary) error {
-	sort.Slice(resources, func(i, j int) bool {
-		return priority(resources[i]) < priority(resources[j])
+// Input holds the information that are required for rendering the output.
+type Input struct {
+	resources []parser.ResourceDiff
+	summary   Summary
+	noColor   bool
+}
+
+// Render implements the methods that renders output in various format.
+type Render interface {
+	Table() error
+	JSON() error
+	YAML() error
+}
+
+// Table renders the output in table format.
+func (input *Input) Table() error {
+	sort.Slice(input.resources, func(i, j int) bool {
+		return priority(input.resources[i]) < priority(input.resources[j])
 	})
 
 	tableWriter := table.NewWriter()
@@ -27,7 +42,7 @@ func RenderTable(resources []parser.ResourceDiff, summary Summary) error {
 		"CHANGES",
 	})
 
-	for _, resource := range resources {
+	for _, resource := range input.resources {
 		tableWriter.AppendRow(table.Row{
 			resource.Kind,
 			resource.Name,
@@ -39,7 +54,16 @@ func RenderTable(resources []parser.ResourceDiff, summary Summary) error {
 
 	tableWriter.Render()
 
-	return printSummary(summary)
+	return printSummary(input.summary)
+}
+
+// New returns new instance of Input when invoked.
+func New(resources []parser.ResourceDiff, summary Summary, noColor bool) *Input {
+	return &Input{
+		resources: resources,
+		summary:   summary,
+		noColor:   noColor,
+	}
 }
 
 func printSummary(summary Summary) error {
