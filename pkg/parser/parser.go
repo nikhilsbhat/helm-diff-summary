@@ -36,6 +36,8 @@ func Parse(r io.Reader) ([]ResourceDiff, error) {
 			current.ChangedLines = current.Additions
 		}
 
+		current.Severity = detectSeverity(current)
+
 		resources = append(resources, *current)
 	}
 
@@ -115,4 +117,126 @@ func Parse(r io.Reader) ([]ResourceDiff, error) {
 	finalize()
 
 	return resources, scanner.Err()
+}
+
+func detectSeverity(resource *ResourceDiff) Severity {
+	// ------------------------------------------------------------
+	// Any deletion is critical
+	// ------------------------------------------------------------
+	if resource.ChangeType == Delete {
+		return Critical
+	}
+
+	// ------------------------------------------------------------
+	// Creates are generally safer
+	// ------------------------------------------------------------
+
+	if resource.ChangeType == Create {
+		switch resource.Kind {
+		// Networking exposure
+		case "Ingress",
+			"Gateway",
+			"HTTPRoute",
+			"VirtualService",
+			"Service":
+			return Medium
+
+		// Security / RBAC
+		case "ClusterRole",
+			"ClusterRoleBinding",
+			"Role",
+			"RoleBinding",
+			"NetworkPolicy":
+			return Medium
+
+		// Storage
+		case "PersistentVolume",
+			"PersistentVolumeClaim",
+			"StorageClass":
+			return Medium
+
+		// Platform-wide changes
+		case "CustomResourceDefinition",
+			"Namespace":
+			return High
+		}
+
+		return Low
+	}
+
+	// ------------------------------------------------------------
+	// Update severity by operational impact
+	// ------------------------------------------------------------
+
+	switch resource.Kind {
+	// ------------------------------------------------------------
+	// CRITICAL platform resources
+	// ------------------------------------------------------------
+	case "Namespace",
+		"CustomResourceDefinition",
+		"MutatingWebhookConfiguration",
+		"ValidatingWebhookConfiguration",
+		"APIService",
+		"PriorityClass":
+		return Critical
+
+	// ------------------------------------------------------------
+	// HIGH severity
+	// ------------------------------------------------------------
+
+	case "Ingress",
+		"Gateway",
+		"HTTPRoute",
+		"VirtualService",
+		"NetworkPolicy",
+		"PersistentVolume",
+		"PersistentVolumeClaim",
+		"StorageClass",
+		"StatefulSet",
+		"ClusterRole",
+		"ClusterRoleBinding",
+		"Role",
+		"RoleBinding",
+		"PodSecurityPolicy",
+		"Certificate",
+		"Issuer",
+		"ClusterIssuer":
+		return High
+
+	// ------------------------------------------------------------
+	// MEDIUM severity
+	// ------------------------------------------------------------
+
+	case "Deployment",
+		"DaemonSet",
+		"ReplicaSet",
+		"ReplicationController",
+		"Job",
+		"CronJob",
+		"HorizontalPodAutoscaler",
+		"VerticalPodAutoscaler",
+		"PodDisruptionBudget",
+		"Service",
+		"Endpoints",
+		"EndpointSlice":
+		return Medium
+
+	// ------------------------------------------------------------
+	// LOW severity
+	// ------------------------------------------------------------
+
+	case "ConfigMap",
+		"Secret",
+		"ServiceAccount",
+		"Pod",
+		"Lease":
+		return Low
+	}
+
+	// ------------------------------------------------------------
+	// Unknown resources
+	// ------------------------------------------------------------
+
+	// Unknown UPDATE resources are medium by default
+	return Medium
 }

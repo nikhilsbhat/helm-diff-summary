@@ -40,6 +40,7 @@ func (input *Input) Table() error {
 		"NAMESPACE",
 		"ACTION",
 		"CHANGES",
+		"SEVERITY",
 	})
 
 	for _, resource := range input.resources {
@@ -49,6 +50,7 @@ func (input *Input) Table() error {
 			resource.Namespace,
 			coloredAction(resource.ChangeType),
 			resource.ChangedLines,
+			coloredSeverity(resource.Severity),
 		})
 	}
 
@@ -125,4 +127,22 @@ func coloredAction(action parser.ChangeType) string {
 	}
 
 	return string(action)
+}
+
+func coloredSeverity(severity parser.Severity) string {
+	switch severity {
+	case parser.Low:
+		return color.New(color.FgGreen).Sprint(severity)
+
+	case parser.Medium:
+		return color.New(color.FgYellow).Sprint(severity)
+
+	case parser.High:
+		return color.New(color.FgHiRed).Sprint(severity)
+
+	case parser.Critical:
+		return color.New(color.BgRed, color.FgWhite, color.Bold).Sprint(severity)
+	}
+
+	return string(severity)
 }
