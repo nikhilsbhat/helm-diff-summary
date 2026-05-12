@@ -63,8 +63,10 @@ helm diff upgrade sample ../helm-images/example/chart/sample  | ./helm-diff-summ
 				os.Exit(0)
 			}
 
+			violations := parser.EvaluatePolicies(resources)
+
 			summary := renderer.BuildSummary(resources)
-			input := renderer.New(resources, summary, cliCfg.noColor)
+			input := renderer.New(resources, violations, summary, cliCfg.noColor)
 
 			switch cliCfg.outputFormat {
 			case "json", "j":
@@ -78,6 +80,17 @@ helm diff upgrade sample ../helm-images/example/chart/sample  | ./helm-diff-summ
 			}
 
 			const exitCode = 2
+
+			if cliCfg.failOnSeverity != "" {
+				severity, err := parser.ParseSeverity(cliCfg.failOnSeverity)
+				if err != nil {
+					log.Fatal(err)
+				}
+
+				if parser.HasViolationsAtOrAbove(violations, severity) {
+					os.Exit(exitCode)
+				}
+			}
 
 			if cliCfg.failOnDelete && summary.Deletes > 0 {
 				os.Exit(exitCode)

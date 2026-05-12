@@ -11,15 +11,17 @@ import (
 
 // Output holds the necessary info to be printed in YAML/JSON format.
 type Output struct {
-	Plan      Summary               `yaml:"plan"                json:"plan"`
-	Resources []parser.ResourceDiff `yaml:"resources,omitempty" json:"resources,omitempty"`
+	Plan       Summary                  `yaml:"plan"                 json:"plan"`
+	Resources  []parser.ResourceDiff    `yaml:"resources,omitempty"  json:"resources,omitempty"`
+	Violations []parser.PolicyViolation `yaml:"violations,omitempty" json:"violations,omitempty"`
 }
 
 // JSON renders output in JSON format.
 func (input *Input) JSON() error {
 	output := Output{
-		Plan:      input.summary,
-		Resources: input.resources,
+		Plan:       input.summary,
+		Resources:  input.resources,
+		Violations: input.violations,
 	}
 
 	encoder := json.NewEncoder(os.Stdout)
@@ -35,8 +37,9 @@ func (input *Input) JSON() error {
 // YAML renders output in YAML format.
 func (input *Input) YAML() error {
 	output := Output{
-		Plan:      input.summary,
-		Resources: input.resources,
+		Plan:       input.summary,
+		Resources:  input.resources,
+		Violations: input.violations,
 	}
 
 	encoder := yaml.NewEncoder(os.Stdout)

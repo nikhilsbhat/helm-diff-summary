@@ -13,9 +13,10 @@ import (
 
 // Input holds the information that are required for rendering the output.
 type Input struct {
-	resources []parser.ResourceDiff
-	summary   Summary
-	noColor   bool
+	resources  []parser.ResourceDiff
+	violations []parser.PolicyViolation
+	summary    Summary
+	noColor    bool
 }
 
 // Render implements the methods that renders output in various format.
@@ -58,33 +59,66 @@ func (input *Input) Table() error {
 
 	tableWriter.Render()
 
-	return printSummary(input.summary)
+	if err := input.printSummary(); err != nil {
+		return err
+	}
+
+	return input.printViolations()
 }
 
 // New returns new instance of Input when invoked.
-func New(resources []parser.ResourceDiff, summary Summary, noColor bool) *Input {
+func New(resources []parser.ResourceDiff, violations []parser.PolicyViolation, summary Summary, noColor bool) *Input {
 	return &Input{
-		resources: resources,
-		summary:   summary,
-		noColor:   noColor,
+		resources:  resources,
+		violations: violations,
+		summary:    summary,
+		noColor:    noColor,
 	}
 }
 
-func printSummary(summary Summary) error {
+func (input *Input) printSummary() error {
 	var builder strings.Builder
 
 	builder.WriteString("\n")
 
 	if _, err := fmt.Fprintf(
 		&builder, "Plan: %d to create, %d to update, %d to delete.\n\n",
-		summary.Creates, summary.Updates, summary.Deletes); err != nil {
+		input.summary.Creates, input.summary.Updates, input.summary.Deletes); err != nil {
 		return err
 	}
 
 	builder.WriteString("Resource Summary:\n")
 
-	for kind, count := range summary.ByKind {
+	for kind, count := range input.summary.ByKind {
 		if _, err := fmt.Fprintf(&builder, "  %s: %d\n", kind, count); err != nil {
+			return err
+		}
+	}
+
+	fmt.Print(builder.String())
+
+	return nil
+}
+
+func (input *Input) printViolations() error {
+	if len(input.violations) == 0 {
+		return nil
+	}
+
+	var builder strings.Builder
+
+	builder.WriteString("\n")
+	builder.WriteString("Policy Violations:\n")
+
+	for _, violation := range input.violations {
+		if _, err := fmt.Fprintf(
+			&builder,
+			"  [%s] %s: %s (%s)\n",
+			violation.Severity,
+			violation.Name,
+			violation.Message,
+			violation.Resource,
+		); err != nil {
 			return err
 		}
 	}
