@@ -8,6 +8,7 @@ import (
 	"os"
 
 	"github.com/nikhilsbhat/helm-diff-summary/pkg/parser"
+	"github.com/nikhilsbhat/helm-diff-summary/pkg/policy"
 	"github.com/nikhilsbhat/helm-diff-summary/pkg/renderer"
 	"github.com/nikhilsbhat/helm-diff-summary/version"
 	"github.com/spf13/cobra"
@@ -63,7 +64,12 @@ helm diff upgrade sample ../helm-images/example/chart/sample  | ./helm-diff-summ
 				os.Exit(0)
 			}
 
-			violations := parser.EvaluatePolicies(resources)
+			policies, err := policy.New("helm-diff-summary.yaml")
+			if err != nil {
+				return err
+			}
+
+			violations := policies.Evaluate(resources)
 
 			summary := renderer.BuildSummary(resources)
 			input := renderer.New(resources, violations, summary, cliCfg.noColor)
@@ -87,7 +93,7 @@ helm diff upgrade sample ../helm-images/example/chart/sample  | ./helm-diff-summ
 					log.Fatal(err)
 				}
 
-				if parser.HasViolationsAtOrAbove(violations, severity) {
+				if policy.HasViolationsAtOrAbove(violations, severity) {
 					os.Exit(exitCode)
 				}
 			}

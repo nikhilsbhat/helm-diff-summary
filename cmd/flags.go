@@ -23,7 +23,7 @@ func registerCommonFlags(cmd *cobra.Command) {
 	cmd.PersistentFlags().StringVarP(&cliCfg.logLevel, "log-level", "l", "INFO",
 		"log level for the helm-diff-summary")
 	cmd.PersistentFlags().StringVarP(&cliCfg.outputFormat, "output", "o", "",
-		"when set, fail if deletes are detected")
+		"output format to which the output needs to be rendered")
 	cmd.PersistentFlags().BoolVarP(&cliCfg.failOnDelete, "fail-on-delete", "", false,
 		"when set, fail if deletes are detected")
 	cmd.PersistentFlags().StringVarP(&cliCfg.failOnSeverity, "fail-on", "", "",

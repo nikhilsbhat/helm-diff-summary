@@ -9,12 +9,13 @@ import (
 	"github.com/fatih/color"
 	"github.com/jedib0t/go-pretty/v6/table"
 	"github.com/nikhilsbhat/helm-diff-summary/pkg/parser"
+	"github.com/nikhilsbhat/helm-diff-summary/pkg/policy"
 )
 
 // Input holds the information that are required for rendering the output.
 type Input struct {
 	resources  []parser.ResourceDiff
-	violations []parser.PolicyViolation
+	violations []policy.Violation
 	summary    Summary
 	noColor    bool
 }
@@ -67,7 +68,7 @@ func (input *Input) Table() error {
 }
 
 // New returns new instance of Input when invoked.
-func New(resources []parser.ResourceDiff, violations []parser.PolicyViolation, summary Summary, noColor bool) *Input {
+func New(resources []parser.ResourceDiff, violations []policy.Violation, summary Summary, noColor bool) *Input {
 	return &Input{
 		resources:  resources,
 		violations: violations,
@@ -108,7 +109,7 @@ func (input *Input) printViolations() error {
 	var builder strings.Builder
 
 	builder.WriteString("\n")
-	builder.WriteString("Policy Violations:\n")
+	builder.WriteString("Config Violations:\n")
 
 	for _, violation := range input.violations {
 		if _, err := fmt.Fprintf(

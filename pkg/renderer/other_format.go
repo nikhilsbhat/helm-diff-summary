@@ -5,15 +5,16 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/goccy/go-yaml"
 	"github.com/nikhilsbhat/helm-diff-summary/pkg/parser"
-	"gopkg.in/yaml.v3"
+	"github.com/nikhilsbhat/helm-diff-summary/pkg/policy"
 )
 
 // Output holds the necessary info to be printed in YAML/JSON format.
 type Output struct {
-	Plan       Summary                  `yaml:"plan"                 json:"plan"`
-	Resources  []parser.ResourceDiff    `yaml:"resources,omitempty"  json:"resources,omitempty"`
-	Violations []parser.PolicyViolation `yaml:"violations,omitempty" json:"violations,omitempty"`
+	Plan       Summary               `yaml:"plan"                 json:"plan"`
+	Resources  []parser.ResourceDiff `yaml:"resources,omitempty"  json:"resources,omitempty"`
+	Violations []policy.Violation    `yaml:"violations,omitempty" json:"violations,omitempty"`
 }
 
 // JSON renders output in JSON format.
@@ -43,6 +44,12 @@ func (input *Input) YAML() error {
 	}
 
 	encoder := yaml.NewEncoder(os.Stdout)
+
+	defer func(encoder *yaml.Encoder) {
+		if err := encoder.Close(); err != nil {
+
+		}
+	}(encoder)
 
 	if err := encoder.Encode(output); err != nil {
 		return fmt.Errorf("failed to render json: %w", err)

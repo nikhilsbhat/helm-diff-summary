@@ -4,9 +4,9 @@ go 1.25.1
 
 require (
 	github.com/fatih/color v1.16.0
+	github.com/goccy/go-yaml v1.19.2
 	github.com/jedib0t/go-pretty/v6 v6.7.10
 	github.com/spf13/cobra v1.10.2
-	gopkg.in/yaml.v3 v3.0.1
 )
 
 require (
