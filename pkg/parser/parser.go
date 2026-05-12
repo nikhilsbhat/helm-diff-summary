@@ -7,8 +7,215 @@ import (
 	"strings"
 )
 
-var headerRegex = regexp.MustCompile(
-	`^([a-zA-Z0-9-]+),\s*([a-zA-Z0-9-]+),\s*([a-zA-Z0-9-]+).*?(has been added|has changed|has been removed):?$`,
+var (
+	headerRegex = regexp.MustCompile(
+		`^([a-zA-Z0-9-]+),\s*([a-zA-Z0-9-]+),\s*([a-zA-Z0-9-]+).*?(has been added|has changed|has been removed):?$`,
+	)
+	categoryMappings = map[Category]map[string]struct{}{
+		Workload: resourceSet(
+			"Deployment",
+			"StatefulSet",
+			"DaemonSet",
+			"ReplicaSet",
+			"ReplicationController",
+			"Job",
+			"CronJob",
+			"Pod",
+			"HorizontalPodAutoscaler",
+			"VerticalPodAutoscaler",
+			"Rollout",
+			"AnalysisRun",
+			"Experiment",
+			"AnalysisTemplate",
+			"ClusterAnalysisTemplate",
+			"Notebook",
+			"PyTorchJob",
+			"TFJob",
+			"MPIJob",
+			"XGBoostJob",
+			"PaddleJob",
+			"RayCluster",
+			"RayJob",
+			"RayService",
+			"SparkApplication",
+			"ScheduledSparkApplication",
+			"TaskRun",
+			"PipelineRun",
+			"Workflow",
+			"WorkflowTemplate",
+			"CronWorkflow",
+			"CloneSet",
+			"AdvancedStatefulSet",
+			"UnitedDeployment",
+			"BroadcastJob",
+		),
+		Networking: resourceSet(
+			"Service",
+			"Ingress",
+			"Gateway",
+			"HTTPRoute",
+			"VirtualService",
+			"NetworkPolicy",
+			"Endpoints",
+			"EndpointSlice",
+			"IngressRoute",
+			"IngressRouteTCP",
+			"IngressRouteUDP",
+			"Middleware",
+			"MiddlewareTCP",
+			"TLSOption",
+			"TLSStore",
+			"TraefikService",
+			"ServersTransport",
+			"ServersTransportTCP",
+			"DestinationRule",
+			"AuthorizationPolicy",
+			"PeerAuthentication",
+			"TCPRoute",
+			"GRPCRoute",
+			"ControlPlane",
+			"DataPlane",
+			"GatewayConfiguration",
+			"KongPlugin",
+			"KongClusterPlugin",
+			"KongConsumer",
+			"KongConsumerGroup",
+			"KongIngress",
+			"ServiceProfile",
+			"Server",
+			"ServerAuthorization",
+			"MeshTLSAuthentication",
+			"NetworkAuthentication",
+			"TLSRoute",
+			"TrafficSplit",
+			"Link",
+			"EgressNetwork",
+			"Policy",
+			"Authorization",
+		),
+		Security: resourceSet(
+			"ClusterRole",
+			"ClusterRoleBinding",
+			"Role",
+			"RoleBinding",
+			"ServiceAccount",
+			"PodSecurityPolicy",
+			"Certificate",
+			"Issuer",
+			"ClusterIssuer",
+			"CertificateRequest",
+			"ExternalSecret",
+			"SecretStore",
+			"ClusterSecretStore",
+			"PushSecret",
+			"VaultAuth",
+			"VaultConnection",
+			"VaultStaticSecret",
+			"VaultDynamicSecret",
+			"VaultPKISecret",
+			"VaultAuthGlobal",
+			"VaultPolicy",
+			"SecretProviderClass",
+			"SecretProviderClassPodStatus",
+			"SealedSecret",
+		),
+		Storage: resourceSet(
+			"PersistentVolume",
+			"PersistentVolumeClaim",
+			"StorageClass",
+			"VolumeAttachment",
+			"CSIDriver",
+			"CSINode",
+			"CSIStorageCapacity",
+			"VolumeSnapshot",
+			"VolumeSnapshotClass",
+			"VolumeSnapshotContent",
+			"Backup",
+			"Restore",
+			"Schedule",
+			"BackupStorageLocation",
+			"VolumeSnapshotLocation",
+			"DeleteBackupRequest",
+			"PodVolumeBackup",
+			"PodVolumeRestore",
+			"CephCluster",
+			"CephBlockPool",
+			"CephFilesystem",
+			"CephObjectStore",
+			"CephObjectStoreUser",
+			"CephFilesystemSubVolumeGroup",
+			"CephNFS",
+			"Volume",
+			"Engine",
+			"Replica",
+			"BackingImage",
+			"BackupVolume",
+			"RecurringJob",
+			"SystemBackup",
+			"CStorPoolCluster",
+			"CStorVolume",
+			"BlockDevice",
+			"DiskPool",
+			"Tenant",
+			"PolicyBinding",
+			"MongoDBCommunity",
+			"PerconaServerMongoDB",
+			"PostgresCluster",
+			"PGUpgrade",
+			"Elasticsearch",
+		),
+		Platform: resourceSet(
+			"Namespace",
+			"CustomResourceDefinition",
+			"MutatingWebhookConfiguration",
+			"ValidatingWebhookConfiguration",
+			"APIService",
+			"PriorityClass",
+			"Provider",
+			"Configuration",
+			"Function",
+			"Composition",
+			"CompositeResourceDefinition",
+			"Application",
+			"AppProject",
+			"ApplicationSet",
+			"Prometheus",
+			"Alertmanager",
+			"ServiceMonitor",
+			"Receiver",
+			"PodMonitor",
+			"Probe",
+			"PrometheusRule",
+			"ScrapeConfig",
+			"ThanosRuler",
+			"Thanos",
+			"Grafana",
+			"NodePool",
+			"EC2NodeClass",
+			"NodeClaim",
+			"Provisioner",
+			"AWSNodeTemplate",
+			"LinkerdControlPlane",
+			"LinkerdDataPlane",
+			"IngressClassParams",
+			"TargetGroupBinding",
+			"GatewayClass",
+			"ReferenceGrant",
+			"AzureIngressProhibitedTarget",
+			"IngressClassParameters",
+			"Route",
+			"ScaledObject",
+			"ScaledJob",
+			"TriggerAuthentication",
+			"ClusterTriggerAuthentication",
+		),
+		Config: resourceSet(
+			"ConfigMap",
+			"Secret",
+		),
+	}
+
+	resourceCategoryMap = buildCategoryMap()
 )
 
 func Parse(r io.Reader) ([]ResourceDiff, error) {
@@ -36,6 +243,7 @@ func Parse(r io.Reader) ([]ResourceDiff, error) {
 			current.ChangedLines = current.Additions
 		}
 
+		current.Category = detectCategory(current.Kind)
 		current.Severity = detectSeverity(current)
 
 		resources = append(resources, *current)
@@ -119,124 +327,130 @@ func Parse(r io.Reader) ([]ResourceDiff, error) {
 	return resources, scanner.Err()
 }
 
+func detectCategory(kind string) Category {
+	if category, ok := resourceCategoryMap[kind]; ok {
+		return category
+	}
+
+	return Unknown
+}
+
 func detectSeverity(resource *ResourceDiff) Severity {
+	const (
+		defaultChangedLength50  = 50
+		defaultChangedLength200 = 200
+		defaultScore2           = 2
+		defaultScore3           = 3
+		defaultScore4           = 4
+		defaultScore5           = 5
+		defaultScore6           = 6
+		defaultScore9           = 9
+	)
+
+	score := 0
 	// ------------------------------------------------------------
-	// Any deletion is critical
+	// Action scoring
 	// ------------------------------------------------------------
-	if resource.ChangeType == Delete {
-		return Critical
+
+	switch resource.ChangeType {
+	case Create:
+		score++
+
+	case Update:
+		score += defaultScore2
+
+	case Delete:
+		score += defaultScore5
 	}
 
 	// ------------------------------------------------------------
-	// Creates are generally safer
+	// Category scoring
 	// ------------------------------------------------------------
 
-	if resource.ChangeType == Create {
-		switch resource.Kind {
-		// Networking exposure
-		case "Ingress",
-			"Gateway",
-			"HTTPRoute",
-			"VirtualService",
-			"Service":
-			return Medium
+	switch resource.Category {
+	case Networking:
+		score += defaultScore2
 
-		// Security / RBAC
-		case "ClusterRole",
-			"ClusterRoleBinding",
-			"Role",
-			"RoleBinding",
-			"NetworkPolicy":
-			return Medium
+	case Security:
+		score += defaultScore3
 
-		// Storage
-		case "PersistentVolume",
-			"PersistentVolumeClaim",
-			"StorageClass":
-			return Medium
+	case Storage:
+		score += defaultScore3
 
-		// Platform-wide changes
-		case "CustomResourceDefinition",
-			"Namespace":
-			return High
-		}
+	case Platform:
+		score += defaultScore4
 
-		return Low
+	case Workload:
+		score++
+
+	case Config:
+		score++
+
+	case Unknown:
+		score += defaultScore2
 	}
 
 	// ------------------------------------------------------------
-	// Update severity by operational impact
+	// Namespace escalation
 	// ------------------------------------------------------------
 
-	switch resource.Kind {
+	switch resource.Namespace {
+	case "kube-system",
+		"istio-system",
+		"cert-manager",
+		"crossplane-system":
+		score += defaultScore3
+	}
+
 	// ------------------------------------------------------------
-	// CRITICAL platform resources
+	// Large change escalation
 	// ------------------------------------------------------------
-	case "Namespace",
-		"CustomResourceDefinition",
-		"MutatingWebhookConfiguration",
-		"ValidatingWebhookConfiguration",
-		"APIService",
-		"PriorityClass":
+
+	if resource.ChangedLines > defaultChangedLength50 {
+		score += defaultScore2
+	}
+
+	if resource.ChangedLines > defaultChangedLength200 {
+		score += defaultScore3
+	}
+
+	// ------------------------------------------------------------
+	// Final severity mapping
+	// ------------------------------------------------------------
+
+	switch {
+	case score >= defaultScore9:
 		return Critical
 
-	// ------------------------------------------------------------
-	// HIGH severity
-	// ------------------------------------------------------------
-
-	case "Ingress",
-		"Gateway",
-		"HTTPRoute",
-		"VirtualService",
-		"NetworkPolicy",
-		"PersistentVolume",
-		"PersistentVolumeClaim",
-		"StorageClass",
-		"StatefulSet",
-		"ClusterRole",
-		"ClusterRoleBinding",
-		"Role",
-		"RoleBinding",
-		"PodSecurityPolicy",
-		"Certificate",
-		"Issuer",
-		"ClusterIssuer":
+	case score >= defaultScore6:
 		return High
 
-	// ------------------------------------------------------------
-	// MEDIUM severity
-	// ------------------------------------------------------------
-
-	case "Deployment",
-		"DaemonSet",
-		"ReplicaSet",
-		"ReplicationController",
-		"Job",
-		"CronJob",
-		"HorizontalPodAutoscaler",
-		"VerticalPodAutoscaler",
-		"PodDisruptionBudget",
-		"Service",
-		"Endpoints",
-		"EndpointSlice":
+	case score >= defaultScore3:
 		return Medium
 
-	// ------------------------------------------------------------
-	// LOW severity
-	// ------------------------------------------------------------
-
-	case "ConfigMap",
-		"Secret",
-		"ServiceAccount",
-		"Pod",
-		"Lease":
+	default:
 		return Low
 	}
+}
 
-	// ------------------------------------------------------------
-	// Unknown resources
-	// ------------------------------------------------------------
+func buildCategoryMap() map[string]Category {
+	result := make(map[string]Category)
 
-	// Unknown UPDATE resources are medium by default
-	return Medium
+	for category, resources := range categoryMappings {
+		for resource := range resources {
+			result[resource] = category
+		}
+	}
+
+	return result
+}
+
+func resourceSet(resources ...string) map[string]struct{} {
+	result := make(map[string]struct{}, len(resources))
+
+	for _, resource := range resources {
+		result[resource] = struct{}{}
+	}
+
+	return result
 }

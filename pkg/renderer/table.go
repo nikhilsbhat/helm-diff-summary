@@ -39,8 +39,9 @@ func (input *Input) Table() error {
 		"NAME",
 		"NAMESPACE",
 		"ACTION",
-		"CHANGES",
 		"SEVERITY",
+		"CATEGORY",
+		"CHANGES",
 	})
 
 	for _, resource := range input.resources {
@@ -49,8 +50,9 @@ func (input *Input) Table() error {
 			resource.Name,
 			resource.Namespace,
 			coloredAction(resource.ChangeType),
-			resource.ChangedLines,
 			coloredSeverity(resource.Severity),
+			resource.Category,
+			resource.ChangedLines,
 		})
 	}
 
