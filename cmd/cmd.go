@@ -12,6 +12,7 @@ var cmd *cobra.Command
 //nolint:gochecknoinits
 func init() {
 	cmd = GetRootCommand()
+	cmd.SilenceErrors = true
 
 	log.SetFlags(log.LstdFlags | log.Lshortfile)
 }

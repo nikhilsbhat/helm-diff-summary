@@ -11,6 +11,7 @@ var headerRegex = regexp.MustCompile(
 	`^([a-zA-Z0-9-]+),\s*([a-zA-Z0-9-]+),\s*([a-zA-Z0-9-]+).*?(has been added|has changed|has been removed):?$`,
 )
 
+// Parse parses the helm diff output to get the summary.
 func Parse(r io.Reader) ([]ResourceDiff, error) {
 	scanner := bufio.NewScanner(r)
 

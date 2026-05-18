@@ -1,0 +1,124 @@
+policies:
+
+  # ------------------------------------------------------------
+  # Global deletion protection
+  # ------------------------------------------------------------
+
+  - name: resource-deletion
+    action: DELETE
+    severity: CRITICAL
+    message: resource deletion detected
+
+  # ------------------------------------------------------------
+  # Networking resources
+  # ------------------------------------------------------------
+
+  - name: networking-update
+    category: NETWORKING
+    action: UPDATE
+    severity: HIGH
+    message: networking resource updated
+
+  - name: networking-create
+    category: NETWORKING
+    action: CREATE
+    severity: MEDIUM
+    message: new networking resource created
+
+  # ------------------------------------------------------------
+  # Platform resources
+  # ------------------------------------------------------------
+
+  - name: platform-update
+    category: PLATFORM
+    action: UPDATE
+    severity: HIGH
+    message: platform resource updated
+
+  - name: platform-deletion
+    category: PLATFORM
+    action: DELETE
+    severity: CRITICAL
+    message: platform resource deleted
+
+  # ------------------------------------------------------------
+  # Storage resources
+  # ------------------------------------------------------------
+
+  - name: storage-update
+    category: STORAGE
+    action: UPDATE
+    severity: HIGH
+    message: storage resource updated
+
+  - name: storage-deletion
+    category: STORAGE
+    action: DELETE
+    severity: CRITICAL
+    message: storage resource deleted
+
+  # ------------------------------------------------------------
+  # Security-sensitive resources
+  # ------------------------------------------------------------
+
+  - name: security-resource-change
+    category: SECURITY
+    severity: HIGH
+    message: security-sensitive resource modified
+
+  # ------------------------------------------------------------
+  # Sensitive namespaces
+  # ------------------------------------------------------------
+
+  - name: production-namespace
+    namespace: production
+    severity: HIGH
+    message: change detected in production namespace
+
+  - name: kube-system-namespace
+    namespace: kube-system
+    severity: CRITICAL
+    message: change detected in kube-system namespace
+
+  - name: monitoring-namespace
+    namespace: monitoring
+    severity: HIGH
+    message: change detected in monitoring namespace
+
+  - name: argocd-namespace
+    namespace: argocd
+    severity: HIGH
+    message: change detected in argocd namespace
+
+  # ------------------------------------------------------------
+  # Critical platform resources
+  # ------------------------------------------------------------
+
+  - name: crd-update
+    kind: CustomResourceDefinition
+    severity: CRITICAL
+    message: CRD modification detected
+
+  - name: cluster-role-update
+    kind: ClusterRole
+    severity: CRITICAL
+    message: ClusterRole modification detected
+
+  - name: webhook-update
+    kind: ValidatingWebhookConfiguration
+    severity: CRITICAL
+    message: admission webhook configuration modified
+
+  # ------------------------------------------------------------
+  # Large changes
+  # ------------------------------------------------------------
+
+  - name: large-change
+    min_changes: 100
+    severity: MEDIUM
+    message: large resource change detected
+
+  - name: massive-change
+    min_changes: 500
+    severity: HIGH
+    message: extremely large resource change detected

@@ -1,8 +1,7 @@
 package renderer
 
 import (
-	"fmt"
-	"os"
+	"log/slog"
 	"sort"
 	"strings"
 
@@ -17,6 +16,8 @@ type Input struct {
 	resources  []parser.ResourceDiff
 	violations []policy.Violation
 	summary    Summary
+	writer     *strings.Builder
+	logger     *slog.Logger
 	noColor    bool
 }
 
@@ -25,6 +26,7 @@ type Render interface {
 	Table() error
 	JSON() error
 	YAML() error
+	Text() error
 }
 
 // Table renders the output in table format.
@@ -34,7 +36,7 @@ func (input *Input) Table() error {
 	})
 
 	tableWriter := table.NewWriter()
-	tableWriter.SetOutputMirror(os.Stdout)
+	tableWriter.SetOutputMirror(input.writer)
 
 	tableWriter.AppendHeader(table.Row{
 		"KIND",
@@ -51,8 +53,8 @@ func (input *Input) Table() error {
 			resource.Kind,
 			resource.Name,
 			resource.Namespace,
-			coloredAction(resource.ChangeType),
-			coloredSeverity(resource.Severity),
+			input.coloredAction(resource.ChangeType),
+			input.coloredSeverity(resource.Severity),
 			resource.Category,
 			resource.ChangedLines,
 		})
@@ -60,73 +62,25 @@ func (input *Input) Table() error {
 
 	tableWriter.Render()
 
-	if err := input.printSummary(); err != nil {
-		return err
-	}
-
-	return input.printViolations()
+	return nil
 }
 
 // New returns new instance of Input when invoked.
-func New(resources []parser.ResourceDiff, violations []policy.Violation, summary Summary, noColor bool) *Input {
+func New(resources []parser.ResourceDiff,
+	violations []policy.Violation,
+	summary Summary,
+	writer *strings.Builder,
+	logger *slog.Logger,
+	noColor bool,
+) *Input {
 	return &Input{
 		resources:  resources,
 		violations: violations,
 		summary:    summary,
+		writer:     writer,
 		noColor:    noColor,
+		logger:     logger,
 	}
-}
-
-func (input *Input) printSummary() error {
-	var builder strings.Builder
-
-	builder.WriteString("\n")
-
-	if _, err := fmt.Fprintf(
-		&builder, "Plan: %d to create, %d to update, %d to delete.\n\n",
-		input.summary.Creates, input.summary.Updates, input.summary.Deletes); err != nil {
-		return err
-	}
-
-	builder.WriteString("Resource Summary:\n")
-
-	for kind, count := range input.summary.ByKind {
-		if _, err := fmt.Fprintf(&builder, "  %s: %d\n", kind, count); err != nil {
-			return err
-		}
-	}
-
-	fmt.Print(builder.String())
-
-	return nil
-}
-
-func (input *Input) printViolations() error {
-	if len(input.violations) == 0 {
-		return nil
-	}
-
-	var builder strings.Builder
-
-	builder.WriteString("\n")
-	builder.WriteString("Config Violations:\n")
-
-	for _, violation := range input.violations {
-		if _, err := fmt.Fprintf(
-			&builder,
-			"  [%s] %s: %s (%s)\n",
-			violation.Severity,
-			violation.Name,
-			violation.Message,
-			violation.Resource,
-		); err != nil {
-			return err
-		}
-	}
-
-	fmt.Print(builder.String())
-
-	return nil
 }
 
 func priority(resource parser.ResourceDiff) int {
@@ -151,7 +105,11 @@ func priority(resource parser.ResourceDiff) int {
 	return defaultCode
 }
 
-func coloredAction(action parser.ChangeType) string {
+func (input *Input) coloredAction(action parser.ChangeType) string {
+	if input.noColor {
+		return string(action)
+	}
+
 	switch action {
 	case parser.Create:
 		return color.New(color.FgGreen).Sprint(action)
@@ -166,7 +124,11 @@ func coloredAction(action parser.ChangeType) string {
 	return string(action)
 }
 
-func coloredSeverity(severity parser.Severity) string {
+func (input *Input) coloredSeverity(severity parser.Severity) string {
+	if input.noColor {
+		return string(severity)
+	}
+
 	switch severity {
 	case parser.Low:
 		return color.New(color.FgGreen).Sprint(severity)

@@ -320,6 +320,228 @@ helm diff upgrade app ./chart \
 
 ---
 
+## Policy Configuration
+
+Custom policies can be configured using a [`helm-diff-summary.yaml`](helm-diff-summary.sample.yaml) file.
+
+The tool automatically loads policies from:
+
+```bash id="n4m7kx"
+./helm-diff-summary.yaml
+```
+
+---
+
+## Example Policy File
+
+```yaml id="x7q2pl"
+policies:
+
+  # ------------------------------------------------------------
+  # Block all deletions
+  # ------------------------------------------------------------
+
+  - name: resource-deletion
+    action: DELETE
+    severity: CRITICAL
+    message: resource deletion detected
+
+  # ------------------------------------------------------------
+  # Networking updates
+  # ------------------------------------------------------------
+
+  - name: networking-update
+    category: NETWORKING
+    action: UPDATE
+    severity: HIGH
+    message: networking resource updated
+
+  # ------------------------------------------------------------
+  # Sensitive namespaces
+  # ------------------------------------------------------------
+
+  - name: production-namespace
+    namespace: production
+    severity: HIGH
+    message: change detected in production namespace
+
+  # ------------------------------------------------------------
+  # Critical platform resources
+  # ------------------------------------------------------------
+
+  - name: crd-update
+    kind: CustomResourceDefinition
+    severity: CRITICAL
+    message: CRD modification detected
+
+  # ------------------------------------------------------------
+  # Large changes
+  # ------------------------------------------------------------
+
+  - name: large-change
+    min_changes: 100
+    severity: MEDIUM
+    message: large resource change detected
+```
+
+---
+
+## Supported Policy Fields
+
+| Field         | Description                                 |
+| ------------- | ------------------------------------------- |
+| `name`        | Unique policy name                          |
+| `kind`        | Match Kubernetes resource kind              |
+| `category`    | Match resource category                     |
+| `action`      | Match action (`CREATE`, `UPDATE`, `DELETE`) |
+| `namespace`   | Match namespace                             |
+| `severity`    | Violation severity                          |
+| `message`     | Violation message                           |
+| `min_changes` | Minimum changed lines threshold             |
+
+---
+
+## Supported Severities
+
+* `LOW`
+* `MEDIUM`
+* `HIGH`
+* `CRITICAL`
+
+---
+
+## Supported Actions
+
+* `CREATE`
+* `UPDATE`
+* `DELETE`
+
+---
+
+## Example
+
+```bash id="q5x2tm"
+helm diff upgrade app ./chart \
+  --output diff | ./helm-diff-summary
+```
+
+If `helm-diff-summary.yaml` exists in the current directory, custom policies are automatically loaded and merged with the built-in default policies.
+
+---
+
+## Notifications
+
+`helm-diff-summary` supports sending deployment summaries and policy violations to external notification systems.
+
+Currently supported:
+
+* Slack
+* Microsoft Teams
+* Google Chat
+* Generic webhooks
+
+Notifications reuse the same table output shown in the CLI.
+
+---
+
+## Notification Usage
+
+### Slack
+
+```bash
+export SLACK_WEBHOOK_URL=https://hooks.slack.com/services/xxx
+
+helm diff upgrade app ./chart \
+  --output diff | ./helm-diff-summary \
+  --notify slack
+```
+
+---
+
+### Microsoft Teams
+
+```bash
+export TEAMS_WEBHOOK_URL=https://example.webhook.office.com/xxx
+
+helm diff upgrade app ./chart \
+  --output diff | ./helm-diff-summary \
+  --notify teams
+```
+
+---
+
+### Google Chat
+
+```bash
+export GCHAT_WEBHOOK_URL=https://chat.googleapis.com/xxx
+
+helm diff upgrade app ./chart \
+  --output diff | ./helm-diff-summary \
+  --notify gchat
+```
+
+---
+
+### Generic Webhook
+
+```bash
+export WEBHOOK_URL=https://example.com/webhook
+
+helm diff upgrade app ./chart \
+  --output diff | ./helm-diff-summary \
+  --notify webhook
+```
+
+---
+
+## Multiple Notification Targets
+
+Multiple notifiers can be specified together.
+
+```bash
+export SLACK_WEBHOOK_URL=https://hooks.slack.com/services/xxx
+export TEAMS_WEBHOOK_URL=https://example.webhook.office.com/xxx
+
+helm diff upgrade app ./chart \
+  --output diff | ./helm-diff-summary \
+  --notify slack,teams
+```
+
+---
+
+## Example Notification
+
+```text
+🚀 Helm Deployment Summary
+
++------------+-------------------+-------------+--------+----------+-----------+---------+
+| KIND       | NAME              | NAMESPACE   | ACTION | SEVERITY | CATEGORY  | CHANGES |
++------------+-------------------+-------------+--------+----------+-----------+---------+
+| Deployment | sample-api        | production  | UPDATE | HIGH     | WORKLOAD  | 12      |
+| ConfigMap  | sample-config     | production  | UPDATE | MEDIUM   | CONFIG    | 3       |
+| Service    | sample            | production  | CREATE | LOW      | NETWORK   | 4       |
++------------+-------------------+-------------+--------+----------+-----------+---------+
+
+Plan: 1 to create, 2 to update, 0 to delete.
+
+🚨 Critical Violations
+
+  [CRITICAL] sensitive-namespace-production:
+  [HIGH] change detected in sensitive namespace (sample-api)
+```
+
+---
+
+## Security Note
+
+Webhook credentials are loaded through environment variables instead of CLI flags to avoid leaking secrets into:
+
+* shell history
+* CI logs
+* process lists
+
+---
+
 # Development
 
 ## Run

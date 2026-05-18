@@ -9,6 +9,7 @@ import (
 	"github.com/nikhilsbhat/helm-diff-summary/pkg/parser"
 )
 
+// Policy implements the methods that evaluates the diffs against the policies.
 type Policy interface {
 	Evaluate(resources []parser.ResourceDiff) []Violation
 }

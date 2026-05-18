@@ -3,9 +3,9 @@ package renderer
 import (
 	"encoding/json"
 	"fmt"
-	"os"
 
 	"github.com/goccy/go-yaml"
+	"github.com/nikhilsbhat/helm-diff-summary/pkg/errors"
 	"github.com/nikhilsbhat/helm-diff-summary/pkg/parser"
 	"github.com/nikhilsbhat/helm-diff-summary/pkg/policy"
 )
@@ -25,7 +25,7 @@ func (input *Input) JSON() error {
 		Violations: input.violations,
 	}
 
-	encoder := json.NewEncoder(os.Stdout)
+	encoder := json.NewEncoder(input.writer)
 	encoder.SetIndent("", "  ")
 
 	if err := encoder.Encode(output); err != nil {
@@ -43,16 +43,18 @@ func (input *Input) YAML() error {
 		Violations: input.violations,
 	}
 
-	encoder := yaml.NewEncoder(os.Stdout)
+	encoder := yaml.NewEncoder(input.writer)
 
 	defer func(encoder *yaml.Encoder) {
 		if err := encoder.Close(); err != nil {
-
+			input.logger.Error(err.Error())
 		}
 	}(encoder)
 
 	if err := encoder.Encode(output); err != nil {
-		return fmt.Errorf("failed to render json: %w", err)
+		return &errors.DiffSummaryError{
+			Message: fmt.Sprintf("failed to render json: %v", err),
+		}
 	}
 
 	return nil
