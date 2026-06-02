@@ -120,9 +120,9 @@ Install `helm-diff-summary` on `macOS`
 ```shell
 brew tap nikshilsbhat/stable git@github.com:nikhilsbhat/homebrew-stable.git
 # for latest version
-brew install nikshilsbhat/stable/helm-diff-summary
+brew install nikhilsbhat/stable/helm-diff-summary
 # for specific version
-brew install nikshilsbhat/stable/helm-diff-summary@0.2.5
+brew install nikhilsbhat/stable/helm-diff-summary@0.2.5
 ```
 
 Check [repo](https://github.com/nikhilsbhat/homebrew-stable) for all available versions of the formula.
