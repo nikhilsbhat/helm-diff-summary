@@ -4,7 +4,9 @@ GOFMT_FILES?=$(shell find . -not -path "./vendor/*" -type f -name '*.go')
 APP_NAME?=helm-diff-summary
 APP_DIR?=$(shell git rev-parse --show-toplevel)
 DEV?=${DEVBOX_TRUE}
-SRC_PACKAGES=$(shell go list -mod=vendor ./... | grep -v "vendor" | grep -v "mocks")
+GOFLAGS?=-mod=vendor
+LINT_FLAGS?=--color always
+SRC_PACKAGES=$(shell go list $(GOFLAGS) ./... | grep -v "vendor" | grep -v "mocks")
 BUILD_ENVIRONMENT?=${ENVIRONMENT}
 VERSION?=0.0.1
 REVISION?=$(shell git rev-parse --verify HEAD)
@@ -53,7 +55,7 @@ mock/publish: local/check ## Builds and mocks app release
 	GOVERSION=${GOVERSION} BUILD_ENVIRONMENT=${BUILD_ENVIRONMENT} PLUGIN_PATH=${APP_DIR} goreleaser release --skip=publish --clean --snapshot
 
 lint: ## Lint's application for errors, it is a linters aggregator (https://github.com/golangci/golangci-lint).
-	if [ -z "${DEV}" ]; then golangci-lint run --color always ; else docker run --rm -v $(APP_DIR):/app -w /app golangci/golangci-lint:v1.46.2-alpine golangci-lint run --color always ; fi
+	if [ -z "${DEV}" ]; then golangci-lint run $(LINT_FLAGS) ; else docker run --rm -v $(APP_DIR):/app -w /app golangci/golangci-lint:v1.46.2-alpine golangci-lint run $(LINT_FLAGS) ; fi
 
 report: ## Publishes the go-report of the appliction (uses go-reportcard)
 	if [ -z "${DEV}" ]; then goreportcard -v ; else docker run --rm -v $(APP_DIR):/app -w /app basnik/goreportcard-cli:latest goreportcard-cli -v ; fi
@@ -65,7 +67,7 @@ generate/document: ## generates cli documents using 'github.com/spf13/cobra/doc'
 	@go generate github.com/nikhilsbhat/helm-diff-summary/docs
 
 test: ## runs test cases
-	@go test ./... -mod=vendor -coverprofile cover.out
+	@go test ./... $(GOFLAGS) -coverprofile cover.out
 
 coverage/check: test ## verifies total test coverage is at least 90 percent
 	@coverage=$$(go tool cover -func=cover.out | awk '/^total:/ {gsub("%","",$$3); print $$3}'); \
