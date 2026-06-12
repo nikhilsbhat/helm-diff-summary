@@ -6,6 +6,7 @@ APP_DIR?=$(shell git rev-parse --show-toplevel)
 DEV?=${DEVBOX_TRUE}
 GOFLAGS?=-mod=vendor
 LINT_FLAGS?=--color always
+export GOFLAGS
 SRC_PACKAGES=$(shell go list $(GOFLAGS) ./... | grep -v "vendor" | grep -v "mocks")
 BUILD_ENVIRONMENT?=${ENVIRONMENT}
 VERSION?=0.0.1
