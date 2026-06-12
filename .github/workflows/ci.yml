@@ -27,7 +27,7 @@ jobs:
         run: go mod verify
 
       - name: Test
-        run: make test
+        run: make coverage/check
 
       - name: Build
         run: go build ./...

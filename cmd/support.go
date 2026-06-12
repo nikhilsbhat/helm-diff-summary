@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"fmt"
+	"io"
 	"log"
 	"os"
 	"strings"
@@ -13,9 +14,19 @@ import (
 	"github.com/spf13/cobra"
 )
 
+var (
+	stdin       io.Reader = os.Stdin
+	stdout      io.Writer = os.Stdout
+	stderr      io.Writer = os.Stderr
+	exitProcess           = os.Exit
+	statStdin             = func() (os.FileInfo, error) {
+		return os.Stdin.Stat()
+	}
+)
+
 func run(_ *cobra.Command, _ []string) error {
 	if cliCfg.showVersion {
-		versionInfo(os.Stdout)
+		versionInfo(stdout)
 
 		return nil
 	}
@@ -24,7 +35,7 @@ func run(_ *cobra.Command, _ []string) error {
 		return err
 	}
 
-	resources, err := parser.Parse(os.Stdin)
+	resources, err := parser.Parse(stdin)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -58,32 +69,32 @@ func run(_ *cobra.Command, _ []string) error {
 }
 
 func validateInput() error {
-	stat, err := os.Stdin.Stat()
+	stat, err := statStdin()
 	if err != nil {
 		log.Fatalf("failed to inspect stdin: %v", err)
 	}
 
 	if (stat.Mode() & os.ModeCharDevice) != 0 {
-		if _, err = fmt.Fprintln(os.Stderr, "no helm diff input detected"); err != nil {
+		if _, err = fmt.Fprintln(stderr, "no helm diff input detected"); err != nil {
 			return err
 		}
 
-		if _, err = fmt.Fprintln(os.Stderr); err != nil {
+		if _, err = fmt.Fprintln(stderr); err != nil {
 			return err
 		}
 
-		os.Exit(1)
+		exitProcess(1)
 	}
 
 	return nil
 }
 
 func handleNoResources() error {
-	if _, err := fmt.Fprintln(os.Stderr, "no resources detected in helm diff output"); err != nil {
+	if _, err := fmt.Fprintln(stderr, "no resources detected in helm diff output"); err != nil {
 		return err
 	}
 
-	os.Exit(0)
+	exitProcess(0)
 
 	return nil
 }
@@ -97,7 +108,9 @@ func renderOutput(input *renderer.Input) error {
 
 		text := input.GetText()
 
-		fmt.Printf("%s", text)
+		if _, err := fmt.Fprint(stdout, text); err != nil {
+			return err
+		}
 
 		return nil
 	case "yaml", "y":
@@ -107,7 +120,9 @@ func renderOutput(input *renderer.Input) error {
 
 		text := input.GetText()
 
-		fmt.Printf("%s", text)
+		if _, err := fmt.Fprint(stdout, text); err != nil {
+			return err
+		}
 
 		return nil
 	default:
@@ -117,7 +132,9 @@ func renderOutput(input *renderer.Input) error {
 
 		text := input.GetText()
 
-		fmt.Printf("%s", text)
+		if _, err := fmt.Fprint(stdout, text); err != nil {
+			return err
+		}
 
 		return sendNotifications(text)
 	}
@@ -137,12 +154,12 @@ func handleExitConditions(violations []policy.Violation, summary renderer.Summar
 		}
 
 		if policy.HasViolationsAtOrAbove(violations, severity) {
-			os.Exit(exitCode)
+			exitProcess(exitCode)
 		}
 	}
 
 	if cliCfg.failOnDelete && summary.Deletes > 0 {
-		os.Exit(exitCode)
+		exitProcess(exitCode)
 	}
 
 	return nil

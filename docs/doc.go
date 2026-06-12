@@ -9,9 +9,13 @@ import (
 
 //go:generate go run github.com/nikhilsbhat/helm-diff-summary/docs
 func main() {
-	commands := cmd.GetRootCommand()
-
-	if err := doc.GenMarkdownTree(commands, "doc"); err != nil {
+	if err := generateDocs("doc"); err != nil {
 		log.Fatal(err)
 	}
+}
+
+func generateDocs(outputDir string) error {
+	commands := cmd.GetRootCommand()
+
+	return doc.GenMarkdownTree(commands, outputDir)
 }

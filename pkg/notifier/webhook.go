@@ -22,6 +22,20 @@ type webhookPayload struct {
 	Text string `json:"text"`
 }
 
+var postWebhook = func(url string, body []byte) (int, string, io.ReadCloser, error) {
+	client := resty.New()
+
+	response, err := client.R().
+		SetHeader("Content-Type", "application/json").
+		SetBody(bytes.NewBuffer(body)).
+		Post(url)
+	if err != nil {
+		return 0, "", nil, err
+	}
+
+	return response.StatusCode(), response.Status(), response.Body, nil
+}
+
 // Name returns the name of the selected webhook.
 func (notifier WebhookNotifier) Name() string {
 	return "webhook"
@@ -40,12 +54,7 @@ func (notifier WebhookNotifier) Notify(message string) error {
 		return err
 	}
 
-	client := resty.New()
-
-	response, err := client.R().
-		SetHeader("Content-Type", "application/json").
-		SetBody(bytes.NewBuffer(body)).
-		Post(notifier.URL)
+	statusCode, status, bodyReader, err := postWebhook(notifier.URL, body)
 	if err != nil {
 		return err
 	}
@@ -54,12 +63,12 @@ func (notifier WebhookNotifier) Notify(message string) error {
 		if err = Body.Close(); err != nil {
 			notifier.logger.Error(err.Error())
 		}
-	}(response.Body)
+	}(bodyReader)
 
-	if response.StatusCode() >= http.StatusBadRequest {
+	if statusCode >= http.StatusBadRequest {
 		return &errors.DiffSummaryError{Message: fmt.Sprintf(
 			"webhook notification failed with status: %s",
-			response.Status(),
+			status,
 		)}
 	}
 

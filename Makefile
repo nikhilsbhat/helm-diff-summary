@@ -67,6 +67,10 @@ generate/document: ## generates cli documents using 'github.com/spf13/cobra/doc'
 test: ## runs test cases
 	@go test ./... -mod=vendor -coverprofile cover.out
 
+coverage/check: test ## verifies total test coverage is at least 90 percent
+	@coverage=$$(go tool cover -func=cover.out | awk '/^total:/ {gsub("%","",$$3); print $$3}'); \
+	awk -v coverage="$$coverage" 'BEGIN { if (coverage < 90) { printf "coverage %.1f%% is below required 90.0%%\n", coverage; exit 1 } printf "coverage %.1f%% meets required 90.0%%\n", coverage }'
+
 coverage/html: test ## generates and opens the HTML coverage report
 	@go tool cover -html=cover.out -o cover.html
 	@open cover.html
