@@ -1,0 +1,42 @@
+name: Bug report
+description: Report incorrect parsing, rendering, policy, notification, or CLI behavior.
+title: "bug: "
+labels:
+  - bug
+body:
+  - type: textarea
+    id: description
+    attributes:
+      label: What happened?
+      description: Describe the bug and the behavior you expected.
+    validations:
+      required: true
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: How can we reproduce it?
+      description: Include the command, relevant helm diff input, and config if possible.
+      render: shell
+    validations:
+      required: true
+  - type: textarea
+    id: output
+    attributes:
+      label: Output
+      description: Paste the actual output or error.
+      render: text
+  - type: input
+    id: version
+    attributes:
+      label: helm-diff-summary version
+      placeholder: helm-diff-summary version output
+  - type: input
+    id: helm_diff_version
+    attributes:
+      label: helm diff version
+      placeholder: helm plugin list
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: OS, architecture, Helm version, and CI provider if relevant.

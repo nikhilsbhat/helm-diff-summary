@@ -1,382 +1,217 @@
 # helm-diff-summary
 
+[![CI](https://github.com/nikhilsbhat/helm-diff-summary/actions/workflows/ci.yml/badge.svg)](https://github.com/nikhilsbhat/helm-diff-summary/actions/workflows/ci.yml)
 [![Go Report Card](https://goreportcard.com/badge/github.com/nikhilsbhat/helm-diff-summary)](https://goreportcard.com/report/github.com/nikhilsbhat/helm-diff-summary)
-[![shields](https://img.shields.io/badge/license-MIT-blue)](https://github.com/nikhilsbhat/helm-diff-summary/blob/master/LICENSE)
-[![shields](https://godoc.org/github.com/nikhilsbhat/helm-diff-summary?status.svg)](https://godoc.org/github.com/nikhilsbhat/helm-diff-summary)
-[![shields](https://img.shields.io/github/v/tag/nikhilsbhat/helm-diff-summary.svg)](https://github.com/nikhilsbhat/helm-diff-summary/tags)
-[![shields](https://img.shields.io/github/downloads/nikhilsbhat/helm-diff-summary/total.svg)](https://github.com/nikhilsbhat/helm-diff-summary/releases)
+[![Go Reference](https://pkg.go.dev/badge/github.com/nikhilsbhat/helm-diff-summary.svg)](https://pkg.go.dev/github.com/nikhilsbhat/helm-diff-summary)
+[![License](https://img.shields.io/badge/license-MIT-blue)](https://github.com/nikhilsbhat/helm-diff-summary/blob/main/LICENSE)
+[![Release](https://img.shields.io/github/v/release/nikhilsbhat/helm-diff-summary)](https://github.com/nikhilsbhat/helm-diff-summary/releases)
+[![Downloads](https://img.shields.io/github/downloads/nikhilsbhat/helm-diff-summary/total.svg)](https://github.com/nikhilsbhat/helm-diff-summary/releases)
 
-A Terraform-style summary tool for `helm diff`.
+Review Helm changes like a Terraform plan.
 
-`helm-diff-summary` converts noisy Helm diff output into a concise, human-readable table showing:
-
-* What Kubernetes resources are changing
-* Whether resources are being created, updated, or deleted
-* Approximate logical change counts
-* A summarized deployment plan
-
-Inspired by:
-
-* [helm-diff](https://github.com/databus23/helm-diff)
-* [tf-summarize](https://github.com/dineshba/tf-summarize)
-
----
-
-# Why?
-
-Raw `helm diff` output becomes difficult to review for:
-
-* large charts
-* GitOps workflows
-* CI/CD pipelines
-* Pull requests
-* platform engineering teams
-
-Example:
-
-```diff
-- replicas: 2
-+ replicas: 3
-- image: app:v1
-+ image: app:v2
-```
-
-After a few hundred lines, identifying the actual impact becomes painful.
-
-`helm-diff-summary` provides a higher-level overview similar to Terraform plans.
-
----
-
-# Features
-
-* Summarizes Helm diff output in a table
-* Detects:
-    * CREATE
-    * UPDATE
-    * DELETE
-* Counts logical resource changes
-* Works with:
-    * `helm diff upgrade`
-    * `--allow-unreleased`
-* CI/CD friendly
-* Lightweight single binary
-* No Kubernetes cluster access required
-
----
-
-# Example
-
-## Input
+`helm-diff-summary` turns noisy [`helm diff`](https://github.com/databus23/helm-diff) output into a compact deployment summary that is easy to read in terminals, CI logs, pull requests, and chat notifications.
 
 ```bash
-helm diff upgrade sample ./chart \
-  --allow-unreleased \
-  -n crossplane-system \
-  --output diff | ./helm-diff-summary
+helm diff upgrade app ./chart --allow-unreleased --output diff | helm-diff-summary
 ```
-
-## Output
 
 ```text
-+------------+-------------------+-------------------+---------+---------+
-| KIND       | NAME              | NAMESPACE         | ACTION  | CHANGES |
-+------------+-------------------+-------------------+---------+---------+
-| Deployment | sample            | crossplane-system | CREATE  | 12      |
-| Service    | sample            | crossplane-system | CREATE  | 4       |
-| ConfigMap  | sample-config     | crossplane-system | CREATE  | 7       |
-+------------+-------------------+-------------------+---------+---------+
++------------+-------------------+-------------+--------+----------+-----------+---------+
+| KIND       | NAME              | NAMESPACE   | ACTION | SEVERITY | CATEGORY  | CHANGES |
++------------+-------------------+-------------+--------+----------+-----------+---------+
+| Deployment | sample-api        | production  | UPDATE | HIGH     | WORKLOAD  |      12 |
+| ConfigMap  | sample-config     | production  | UPDATE | MEDIUM   | CONFIG    |       3 |
+| Service    | sample            | production  | CREATE | LOW      | NETWORK   |       4 |
++------------+-------------------+-------------+--------+----------+-----------+---------+
 
-Plan: 3 to create, 0 to update, 0 to delete.
+Plan: 1 to create, 2 to update, 0 to delete.
 ```
 
-## Documentation
+## Why Use It?
 
-Updated documentation on all available commands and flags can be found [here](https://github.com/nikhilsbhat/gocd-cli/blob/main/docs/doc/gocd-cli.md).
+Raw Helm diffs are useful, but they become hard to review when charts grow, generated manifests are large, or deployment changes need approval in a pull request.
 
----
+`helm-diff-summary` helps platform and application teams answer the questions that matter before a release:
 
-# Installation
+* What Kubernetes resources will change?
+* Are resources being created, updated, or deleted?
+* Are risky resources or namespaces involved?
+* Should CI fail because a delete or high-severity policy violation was detected?
+* Can the same summary be sent to Slack, Microsoft Teams, Google Chat, or a webhook?
 
-* Recommend installing released versions. Release binaries are available on the [releases](https://github.com/nikhilsbhat/helm-diff-summary/releases) page.
+## Features
 
-#### Prerequisites
+* Summarizes `helm diff upgrade --output diff` into a Terraform-style plan
+* Detects `CREATE`, `UPDATE`, and `DELETE`
+* Adds approximate logical change counts per resource
+* Classifies resources by severity and category
+* Supports custom policy checks from `helm-diff-summary.yaml`
+* Can fail CI on deletes or policy severity thresholds
+* Renders terminal tables, JSON, and YAML
+* Sends summaries to Slack, Microsoft Teams, Google Chat, and generic webhooks
+* Works without Kubernetes cluster access because it reads `helm diff` output from stdin
+* Ships as a single binary, Docker image, and Homebrew formula
 
-Install:
+## Installation
 
-* Helm
-* helm-diff plugin
-* Go 1.22+
-
-Install helm-diff:
+### Go
 
 ```bash
-helm plugin install https://github.com/databus23/helm-diff
+go install github.com/nikhilsbhat/helm-diff-summary@latest
 ```
 
-#### Homebrew
+### Release Binary
 
-Install `helm-diff-summary` on `macOS`
+Download signed release artifacts from the [releases page](https://github.com/nikhilsbhat/helm-diff-summary/releases).
 
-```shell
-brew tap nikshilsbhat/stable git@github.com:nikhilsbhat/homebrew-stable.git
-# for latest version
+### Homebrew
+
+```bash
+brew tap nikhilsbhat/stable https://github.com/nikhilsbhat/homebrew-stable.git
 brew install nikhilsbhat/stable/helm-diff-summary
-# for specific version
+```
+
+Install a specific version:
+
+```bash
 brew install nikhilsbhat/stable/helm-diff-summary@0.2.5
 ```
 
-Check [repo](https://github.com/nikhilsbhat/homebrew-stable) for all available versions of the formula.
-
-#### Docker
-
-Latest version of docker images are published to [ghcr.io](https://github.com/nikhilsbhat/helm-diff-summary/pkgs/container/helm-diff-summary), all available images can be found there. </br>
+### Docker
 
 ```bash
 docker pull ghcr.io/nikhilsbhat/helm-diff-summary:latest
 docker pull ghcr.io/nikhilsbhat/helm-diff-summary:<github-release-tag>
 ```
 
-#### Build from Source
+### Build From Source
 
-1. Clone the repository:
-    ```sh
-    git clone https://github.com/nikhilsbhat/helm-diff-summary.git
-    cd helm-diff-summary
-    ```
-2. Build the project:
-    ```sh
-    make local.build
-    ```
+```bash
+git clone https://github.com/nikhilsbhat/helm-diff-summary.git
+cd helm-diff-summary
+make local/build
+```
 
----
+## Prerequisites
 
-# Usage
+Install Helm and the `helm diff` plugin:
 
-## Basic
+```bash
+helm plugin install https://github.com/databus23/helm-diff
+```
+
+## Usage
+
+### Basic
 
 ```bash
 helm diff upgrade my-release ./chart \
-  --output diff | ./helm-diff-summary
+  --output diff | helm-diff-summary
 ```
 
----
-
-## Fresh Install
+### Fresh Install Preview
 
 ```bash
 helm diff upgrade my-release ./chart \
   --allow-unreleased \
-  --output diff | ./helm-diff-summary
+  --output diff | helm-diff-summary
 ```
 
----
-
-## Namespace
+### JSON or YAML Output
 
 ```bash
 helm diff upgrade my-release ./chart \
-  -n production \
-  --output diff | ./helm-diff-summary
+  --output diff | helm-diff-summary -o json
+
+helm diff upgrade my-release ./chart \
+  --output diff | helm-diff-summary -o yaml
 ```
 
----
-
-# How It Works
-
-`helm-diff-summary` parses the structured resource headers emitted by `helm diff`.
-
-Example:
-
-```text
-crossplane-system, sample, Deployment (apps) has been added:
-```
-
-From this it extracts:
-
-* namespace
-* resource name
-* resource kind
-* action type
-
-It then counts meaningful diff lines inside the resource block.
-
----
-
-# Logical Change Counting
-
-Raw unified diffs tend to overcount changes.
-
-Example:
-
-```diff
-- image: app:v1
-+ image: app:v2
-```
-
-Technically this is:
-
-* 1 deletion
-* 1 addition
-
-But semantically it is a single field update.
-
-To make output more human-friendly:
-
-* CREATE → counts additions
-* DELETE → counts deletions
-* UPDATE → counts additions only
-
-This produces Terraform-style summaries instead of raw diff math.
-
-```shell
-# Sample output on fresh installation 
-+----------------+------------------------------+-----------+--------+---------+
-| KIND           | NAME                         | NAMESPACE | ACTION | CHANGES |
-+----------------+------------------------------+-----------+--------+---------+
-| DaemonSet      | fluentd-elasticsearch        | default   | CREATE |      53 |
-| ReplicaSet     | frontend                     | default   | CREATE |      20 |
-| Function       | function-patch-and-transform | default   | CREATE |       7 |
-| CronJob        | hello                        | default   | CREATE |      19 |
-| Configuration  | my-configuration             | default   | CREATE |       7 |
-| Pod            | nginx                        | default   | CREATE |      14 |
-| Pod            | nginx-2                      | default   | CREATE |      10 |
-| Job            | pi                           | default   | CREATE |      13 |
-| Provider       | provider-aws                 | default   | CREATE |       7 |
-| Deployment     | sample                       | default   | CREATE |      45 |
-| Service        | sample                       | default   | CREATE |      20 |
-| ServiceAccount | sample                       | default   | CREATE |      10 |
-| ConfigMap      | sample-config-map            | default   | CREATE |      10 |
-| ConfigMap      | sample-config-map-json       | default   | CREATE |      16 |
-| ConfigMap      | sample-config-map-test       | default   | CREATE |      17 |
-| ConfigMap      | sample-config-map-test-2     | default   | CREATE |      13 |
-| ConfigMap      | sample-config-map-yaml       | default   | CREATE |      15 |
-| ConfigMap      | test-cm                      | default   | CREATE |       7 |
-| StatefulSet    | web                          | default   | CREATE |      35 |
-+----------------+------------------------------+-----------+--------+---------+
-```
-
-```shell
-# Sample output for following diff
-
-# default, sample-config-map-test-2, ConfigMap (v1) has changed:
-#  # Source: sample/templates/configmap.yaml
-#  apiVersion: v1
-#  kind: ConfigMap
-#  metadata:
-#    name: sample-config-map-test-2
-#    namespace: default
-#  data:
-#    config: |
-#      - name: test
-#        image: ghcr.io/virtu/test:v2.2.0
-#      - name: virtu
-#-       type: foo
-#+       type: foor
-#      - name: foolist
-#        type: bar
-
-+-----------+--------------------------+-----------+--------+---------+
-| KIND      | NAME                     | NAMESPACE | ACTION | CHANGES |
-+-----------+--------------------------+-----------+--------+---------+
-| ConfigMap | sample-config-map-test-2 | default   | UPDATE |       1 |
-+-----------+--------------------------+-----------+--------+---------+
-```
----
-
-# Current Limitations
-
-This tool currently uses unified diff parsing.
-
-It does not yet perform:
-
-* semantic YAML diffing
-* Kubernetes-aware field comparison
-* exact field-level mutation analysis
-
-Therefore:
-
-* counts are approximate
-* formatting changes may still appear as updates
-
----
-
-# CI/CD Usage
-
-Useful for:
-
-* GitHub Actions
-* GitLab CI
-* ArgoCD
-* FluxCD
-* Atlantis-style workflows
-* PR review automation
-
-Example:
+### Fail CI on Deletes
 
 ```bash
-helm diff upgrade app ./chart \
-  --output diff | ./helm-diff-summary
+helm diff upgrade my-release ./chart \
+  --output diff | helm-diff-summary --fail-on-delete
 ```
 
----
+### Fail CI on Policy Severity
 
-## Policy Configuration
-
-Custom policies can be configured using a [`helm-diff-summary.yaml`](helm-diff-summary.sample.yaml) file.
-
-The tool automatically loads policies from:
-
-```bash id="n4m7kx"
-./helm-diff-summary.yaml
+```bash
+helm diff upgrade my-release ./chart \
+  --output diff | helm-diff-summary --fail-on high
 ```
 
----
+Supported thresholds are `low`, `medium`, `high`, and `critical`.
 
-## Example Policy File
+## CI Examples
 
-```yaml id="x7q2pl"
+### GitHub Actions
+
+```yaml
+name: Helm diff summary
+
+on:
+  pull_request:
+
+jobs:
+  helm-diff-summary:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: azure/setup-helm@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version: stable
+
+      - name: Install helm-diff
+        run: helm plugin install https://github.com/databus23/helm-diff
+
+      - name: Install helm-diff-summary
+        run: go install github.com/nikhilsbhat/helm-diff-summary@latest
+
+      - name: Summarize Helm diff
+        run: |
+          helm diff upgrade my-release ./chart \
+            --allow-unreleased \
+            --namespace production \
+            --output diff | helm-diff-summary --fail-on high
+```
+
+### GitLab CI
+
+```yaml
+helm-diff-summary:
+  image: golang:1
+  script:
+    - curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
+    - helm plugin install https://github.com/databus23/helm-diff
+    - go install github.com/nikhilsbhat/helm-diff-summary@latest
+    - helm diff upgrade my-release ./chart --allow-unreleased --output diff | helm-diff-summary --fail-on high
+```
+
+## Policies
+
+Create `helm-diff-summary.yaml` in the working directory to flag risky changes.
+
+```yaml
 policies:
-
-  # ------------------------------------------------------------
-  # Block all deletions
-  # ------------------------------------------------------------
-
   - name: resource-deletion
     action: DELETE
     severity: CRITICAL
     message: resource deletion detected
-
-  # ------------------------------------------------------------
-  # Networking updates
-  # ------------------------------------------------------------
-
-  - name: networking-update
-    category: NETWORKING
-    action: UPDATE
-    severity: HIGH
-    message: networking resource updated
-
-  # ------------------------------------------------------------
-  # Sensitive namespaces
-  # ------------------------------------------------------------
 
   - name: production-namespace
     namespace: production
     severity: HIGH
     message: change detected in production namespace
 
-  # ------------------------------------------------------------
-  # Critical platform resources
-  # ------------------------------------------------------------
-
   - name: crd-update
     kind: CustomResourceDefinition
+    action: UPDATE
     severity: CRITICAL
     message: CRD modification detected
-
-  # ------------------------------------------------------------
-  # Large changes
-  # ------------------------------------------------------------
 
   - name: large-change
     min_changes: 100
@@ -384,67 +219,24 @@ policies:
     message: large resource change detected
 ```
 
----
+See [`helm-diff-summary.sample.yaml`](helm-diff-summary.sample.yaml) for a fuller example.
 
-## Supported Policy Fields
+Supported policy fields:
 
-| Field         | Description                                 |
-| ------------- | ------------------------------------------- |
-| `name`        | Unique policy name                          |
-| `kind`        | Match Kubernetes resource kind              |
-| `category`    | Match resource category                     |
-| `action`      | Match action (`CREATE`, `UPDATE`, `DELETE`) |
-| `namespace`   | Match namespace                             |
-| `severity`    | Violation severity                          |
-| `message`     | Violation message                           |
-| `min_changes` | Minimum changed lines threshold             |
-
----
-
-## Supported Severities
-
-* `LOW`
-* `MEDIUM`
-* `HIGH`
-* `CRITICAL`
-
----
-
-## Supported Actions
-
-* `CREATE`
-* `UPDATE`
-* `DELETE`
-
----
-
-## Example
-
-```bash id="q5x2tm"
-helm diff upgrade app ./chart \
-  --output diff | ./helm-diff-summary
-```
-
-If `helm-diff-summary.yaml` exists in the current directory, custom policies are automatically loaded and merged with the built-in default policies.
-
----
+| Field | Description |
+| --- | --- |
+| `name` | Unique policy name |
+| `kind` | Kubernetes resource kind |
+| `category` | Resource category |
+| `action` | Change action: `CREATE`, `UPDATE`, or `DELETE` |
+| `namespace` | Kubernetes namespace |
+| `severity` | `LOW`, `MEDIUM`, `HIGH`, or `CRITICAL` |
+| `message` | Violation message |
+| `min_changes` | Minimum changed lines threshold |
 
 ## Notifications
 
-`helm-diff-summary` supports sending deployment summaries and policy violations to external notification systems.
-
-Currently supported:
-
-* Slack
-* Microsoft Teams
-* Google Chat
-* Generic webhooks
-
-Notifications reuse the same table output shown in the CLI.
-
----
-
-## Notification Usage
+Send deployment summaries and policy violations to external systems.
 
 ### Slack
 
@@ -452,11 +244,8 @@ Notifications reuse the same table output shown in the CLI.
 export SLACK_WEBHOOK_URL=https://hooks.slack.com/services/xxx
 
 helm diff upgrade app ./chart \
-  --output diff | ./helm-diff-summary \
-  --notify slack
+  --output diff | helm-diff-summary --notify slack
 ```
-
----
 
 ### Microsoft Teams
 
@@ -464,11 +253,8 @@ helm diff upgrade app ./chart \
 export TEAMS_WEBHOOK_URL=https://example.webhook.office.com/xxx
 
 helm diff upgrade app ./chart \
-  --output diff | ./helm-diff-summary \
-  --notify teams
+  --output diff | helm-diff-summary --notify teams
 ```
-
----
 
 ### Google Chat
 
@@ -476,11 +262,8 @@ helm diff upgrade app ./chart \
 export GCHAT_WEBHOOK_URL=https://chat.googleapis.com/xxx
 
 helm diff upgrade app ./chart \
-  --output diff | ./helm-diff-summary \
-  --notify gchat
+  --output diff | helm-diff-summary --notify gchat
 ```
-
----
 
 ### Generic Webhook
 
@@ -488,80 +271,79 @@ helm diff upgrade app ./chart \
 export WEBHOOK_URL=https://example.com/webhook
 
 helm diff upgrade app ./chart \
-  --output diff | ./helm-diff-summary \
-  --notify webhook
+  --output diff | helm-diff-summary --notify webhook
 ```
 
----
-
-## Multiple Notification Targets
-
-Multiple notifiers can be specified together.
+Multiple targets can be used together:
 
 ```bash
-export SLACK_WEBHOOK_URL=https://hooks.slack.com/services/xxx
-export TEAMS_WEBHOOK_URL=https://example.webhook.office.com/xxx
-
 helm diff upgrade app ./chart \
-  --output diff | ./helm-diff-summary \
-  --notify slack,teams
+  --output diff | helm-diff-summary --notify slack,teams
 ```
 
----
+Webhook credentials are read from environment variables so they do not appear in shell history, CI logs, or process lists.
 
-## Example Notification
+## How It Works
+
+`helm-diff-summary` parses resource headers emitted by `helm diff`.
 
 ```text
-🚀 Helm Deployment Summary
-
-+------------+-------------------+-------------+--------+----------+-----------+---------+
-| KIND       | NAME              | NAMESPACE   | ACTION | SEVERITY | CATEGORY  | CHANGES |
-+------------+-------------------+-------------+--------+----------+-----------+---------+
-| Deployment | sample-api        | production  | UPDATE | HIGH     | WORKLOAD  | 12      |
-| ConfigMap  | sample-config     | production  | UPDATE | MEDIUM   | CONFIG    | 3       |
-| Service    | sample            | production  | CREATE | LOW      | NETWORK   | 4       |
-+------------+-------------------+-------------+--------+----------+-----------+---------+
-
-Plan: 1 to create, 2 to update, 0 to delete.
-
-🚨 Critical Violations
-
-  [CRITICAL] sensitive-namespace-production:
-  [HIGH] change detected in sensitive namespace (sample-api)
+production, sample-api, Deployment (apps) has changed:
 ```
 
----
+From each resource block it extracts the namespace, name, kind, action, severity, and logical change count.
 
-## Security Note
+Logical change counts are intentionally approximate. For an update like this:
 
-Webhook credentials are loaded through environment variables instead of CLI flags to avoid leaking secrets into:
+```diff
+- image: app:v1
++ image: app:v2
+```
 
-* shell history
-* CI logs
-* process lists
+the tool reports one logical update instead of two raw diff lines.
 
----
+## Current Limitations
 
-# Development
+This tool currently parses unified diff output. It does not yet perform semantic YAML diffing, Kubernetes-aware field comparison, or exact field-level mutation analysis. Formatting-only changes may still appear as updates.
 
-## Run
+## Documentation
+
+Generated command documentation is available in [`docs/doc/helm-diff-summary.md`](docs/doc/helm-diff-summary.md).
+
+## Development
 
 ```bash
+go test ./...
 go run . < diff.txt
 ```
 
----
-
-## Test Against Helm Diff
+Generate command documentation:
 
 ```bash
-helm diff upgrade sample ./chart \
-  --allow-unreleased \
-  --output diff > diff.txt
-
-cat diff.txt | go run .
+make generate/document
 ```
 
-# License
+Build a local binary:
+
+```bash
+make local/build
+```
+
+## Community And Discovery
+
+If this project helps your Helm or GitOps workflow, a star, issue, or example workflow goes a long way.
+
+Recommended GitHub topics for the repository:
+
+```text
+helm, helm-diff, kubernetes, gitops, ci-cd, devops, platform-engineering, sre, terraform-plan, pull-request, argocd, fluxcd
+```
+
+## Related Projects
+
+* [`helm-diff`](https://github.com/databus23/helm-diff)
+* [`tf-summarize`](https://github.com/dineshba/tf-summarize)
+
+## License
 
 MIT

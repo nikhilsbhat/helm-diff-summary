@@ -65,4 +65,8 @@ generate/document: ## generates cli documents using 'github.com/spf13/cobra/doc'
 	@go generate github.com/nikhilsbhat/helm-diff-summary/docs
 
 test: ## runs test cases
-	@go test ./... -mod=vendor -coverprofile cover.out && go tool cover -html=cover.out -o cover.html && open cover.html
+	@go test ./... -mod=vendor -coverprofile cover.out
+
+coverage/html: test ## generates and opens the HTML coverage report
+	@go tool cover -html=cover.out -o cover.html
+	@open cover.html

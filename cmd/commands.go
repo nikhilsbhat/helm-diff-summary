@@ -17,12 +17,13 @@ func GetRootCommand() *cobra.Command {
 		Long:    `A utility that reads the helm diff plugin's output and summarizes its output in a Terraform style`,
 		PreRunE: setCLIClient,
 		Args:    cobra.NoArgs,
-		Example: `helm diff ... --output diff | helm-diff-summary
-helm diff upgrade sample ../helm-images/example/chart/sample  | ./helm-diff-summary -o yaml
-helm diff upgrade sample ../helm-images/example/chart/sample  | ./helm-diff-summary -o json
-helm diff upgrade sample ../helm-images/example/chart/sample  | ./helm-diff-summary --fail-on high
-helm diff upgrade sample ../helm-images/example/chart/sample  | ./helm-diff-summary --fail-on-delete
-helm diff upgrade sample ../helm-images/example/chart/sample  | ./helm-diff-summary --notify slack,gchat`,
+		Example: `helm diff upgrade my-release ./chart --output diff | helm-diff-summary
+helm diff upgrade my-release ./chart --allow-unreleased --output diff | helm-diff-summary
+helm diff upgrade my-release ./chart --output diff | helm-diff-summary -o yaml
+helm diff upgrade my-release ./chart --output diff | helm-diff-summary -o json
+helm diff upgrade my-release ./chart --output diff | helm-diff-summary --fail-on high
+helm diff upgrade my-release ./chart --output diff | helm-diff-summary --fail-on-delete
+helm diff upgrade my-release ./chart --output diff | helm-diff-summary --notify slack,gchat`,
 		RunE: run,
 	}
 
