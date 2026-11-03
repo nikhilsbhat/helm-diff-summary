@@ -1,0 +1,9 @@
+name: "diff-summary"
+version: "0.0.2"
+usage: "Summarizes helm diff output as a Terraform-style deployment plan"
+description: "Reads helm diff output from stdin and renders resource summaries, policy checks, and notifications"
+ignoreFlags: false
+command: "$HELM_PLUGIN_DIR/bin/helm-diff-summary"
+hooks:
+  install: "$HELM_PLUGIN_DIR/install-binary.sh"
+  update: "$HELM_PLUGIN_DIR/install-binary.sh"

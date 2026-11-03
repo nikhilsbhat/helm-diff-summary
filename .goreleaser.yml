@@ -65,6 +65,8 @@ archives:
       {{- else }}{{ .Arch }}{{ end }}
     files:
       - LICENSE
+      - plugin.yaml
+      - install-binary.sh
 
 brews:
   - name: helm-diff-summary

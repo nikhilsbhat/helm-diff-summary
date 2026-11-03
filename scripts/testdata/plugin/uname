@@ -1,0 +1,6 @@
+#!/bin/sh
+case "$1" in
+  -s) echo "$TEST_PLUGIN_OS" ;;
+  -m) echo "$TEST_PLUGIN_ARCH" ;;
+  *) exit 1 ;;
+esac

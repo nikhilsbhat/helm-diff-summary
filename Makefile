@@ -6,6 +6,7 @@ APP_DIR?=$(shell git rev-parse --show-toplevel)
 DEV?=${DEVBOX_TRUE}
 GOFLAGS?=-mod=vendor
 LINT_FLAGS?=--color always
+HELM_PLUGIN_PATH?=$(shell helm env HELM_PLUGINS)/diff-summary
 export GOFLAGS
 SRC_PACKAGES=$(shell go list $(GOFLAGS) ./... | grep -v "vendor" | grep -v "mocks")
 BUILD_ENVIRONMENT?=${ENVIRONMENT}
@@ -45,6 +46,17 @@ local/snapshot: local/check ## Generates the artifact with the help of 'go build
 	GOVERSION=${GOVERSION} BUILD_ENVIRONMENT=${BUILD_ENVIRONMENT} goreleaser build --snapshot --clean
 
 local/push: local/build ## Pushes built artifact to the specified location
+
+.PHONY: local/install test/plugin
+local/install: ## Builds and installs the Helm plugin from this checkout
+	@mkdir -p "$(HELM_PLUGIN_PATH)/bin"
+	@go build -o "$(HELM_PLUGIN_PATH)/bin/$(APP_NAME)" .
+	@cp plugin.yaml install-binary.sh "$(HELM_PLUGIN_PATH)/"
+	@chmod +x "$(HELM_PLUGIN_PATH)/install-binary.sh"
+	@echo "installed diff-summary to $(HELM_PLUGIN_PATH)"
+
+test/plugin: ## Tests plugin installation and Helm invocation in an isolated directory
+	@sh scripts/test-plugin.sh
 
 local/run: local/build ## Generates the artifact and start the service in the current directory
 	./${APP_NAME}

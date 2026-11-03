@@ -50,9 +50,54 @@ Raw Helm diffs are useful, but they become hard to review when charts grow, gene
 * Renders terminal tables, JSON, and YAML
 * Sends summaries to Slack, Microsoft Teams, Google Chat, and generic webhooks
 * Works without Kubernetes cluster access because it reads `helm diff` output from stdin
-* Ships as a single binary, Docker image, and Homebrew formula
+* Ships as a single binary, Helm plugin, Docker image, and Homebrew formula
 
 ## Installation
+
+### Helm Plugin
+
+The optional plugin supports both Helm 3 and Helm 4, using the same plugin layout as [helm-images](https://github.com/nikhilsbhat/helm-images) and [helm-drift](https://github.com/nikhilsbhat/helm-drift).
+
+Install with Helm 3:
+
+```bash
+helm plugin install https://github.com/nikhilsbhat/helm-diff-summary --version main
+```
+
+Install with Helm 4:
+
+```bash
+helm plugin install https://github.com/nikhilsbhat/helm-diff-summary --version main --verify=false
+```
+
+Usage is identical on both versions:
+
+```bash
+helm diff upgrade app ./chart --allow-unreleased --output diff | helm diff-summary
+```
+
+The plugin invokes the same executable as the standalone `helm-diff-summary` command. All summary flags work after `helm diff-summary`, including `-o json`, `--fail-on high`, `--fail-on-delete`, and `--notify slack`. Policy files are still read from your working directory. Install `helm-diff` separately to produce the input.
+
+```bash
+helm diff upgrade app ./chart --output diff | helm diff-summary --fail-on-delete
+helm plugin update diff-summary
+helm plugin uninstall diff-summary
+```
+
+Use `--version main` until the first plugin-aware release is tagged: earlier tags do not contain a plugin manifest. Once that release is published, you can install its tag with `--version vX.Y.Z` or omit `--version` to select the latest release.
+
+The download hook supports Linux, macOS, and FreeBSD with `curl`, `tar`, and either `sha256sum` or `shasum`. It downloads the version recorded in `plugin.yaml` and verifies the release archive checksum before installation. Windows users can use the standalone executable.
+
+The shared manifest uses the Helm 3 format, which Helm 4 also supports. Helm 4's `--verify=false` is required for this Git-based installation because the source does not provide Helm plugin provenance; the hook still verifies the binary archive checksum. CI runs plugin integration tests against both Helm 3.19.0 and Helm 4.1.3.
+
+For a checkout that has not been released yet, build and install locally:
+
+```bash
+make local/install
+helm diff-summary --help
+```
+
+Run `make test/plugin` to test the installer and Helm invocation in temporary directories. Before publishing a new release, set `plugin.yaml`'s version to the release version without its `v` prefix; the matching binaries and checksum file must be published together. Plugin installation from historical Git tags predating `plugin.yaml` is not supported.
 
 ### Go
 
