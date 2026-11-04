@@ -61,13 +61,13 @@ The optional plugin supports both Helm 3 and Helm 4, using the same plugin layou
 Install with Helm 3:
 
 ```bash
-helm plugin install https://github.com/nikhilsbhat/helm-diff-summary --version main
+helm plugin install https://github.com/nikhilsbhat/helm-diff-summary --version v0.0.3
 ```
 
 Install with Helm 4:
 
 ```bash
-helm plugin install https://github.com/nikhilsbhat/helm-diff-summary --version main --verify=false
+helm plugin install https://github.com/nikhilsbhat/helm-diff-summary --version v0.0.3 --verify=false
 ```
 
 Usage is identical on both versions:
@@ -84,7 +84,7 @@ helm plugin update diff-summary
 helm plugin uninstall diff-summary
 ```
 
-Use `--version main` until the first plugin-aware release is tagged: earlier tags do not contain a plugin manifest. Once that release is published, you can install its tag with `--version vX.Y.Z` or omit `--version` to select the latest release.
+Plugin installation is available starting with `v0.0.3`. The commands above require that release to be published; earlier tags do not contain a plugin manifest. Omit `--version` to select the latest release.
 
 The download hook supports Linux, macOS, and FreeBSD with `curl`, `tar`, and either `sha256sum` or `shasum`. It downloads the version recorded in `plugin.yaml` and verifies the release archive checksum before installation. Windows users can use the standalone executable.
 
@@ -97,7 +97,7 @@ make local/install
 helm diff-summary --help
 ```
 
-Run `make test/plugin` to test the installer and Helm invocation in temporary directories. Before publishing a new release, set `plugin.yaml`'s version to the release version without its `v` prefix; the matching binaries and checksum file must be published together. Plugin installation from historical Git tags predating `plugin.yaml` is not supported.
+Run `make test/plugin` to test the installer and Helm invocation in temporary directories. See [Releasing](docs/releasing.md) for the version, tagging, signing, and publishing steps. Plugin installation from historical Git tags predating `plugin.yaml` is not supported.
 
 ### Go
 
@@ -119,7 +119,7 @@ brew install nikhilsbhat/stable/helm-diff-summary
 Install a specific version:
 
 ```bash
-brew install nikhilsbhat/stable/helm-diff-summary@0.2.5
+brew install nikhilsbhat/stable/helm-diff-summary@0.0.3
 ```
 
 ### Docker

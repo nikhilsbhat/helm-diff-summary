@@ -10,7 +10,7 @@ HELM_PLUGIN_PATH?=$(shell helm env HELM_PLUGINS)/diff-summary
 export GOFLAGS
 SRC_PACKAGES=$(shell go list $(GOFLAGS) ./... | grep -v "vendor" | grep -v "mocks")
 BUILD_ENVIRONMENT?=${ENVIRONMENT}
-VERSION?=0.0.1
+VERSION?=$(shell awk -F '"' '/^version:/ {print $$2; exit}' plugin.yaml)
 REVISION?=$(shell git rev-parse --verify HEAD)
 DATE?=$(shell date)
 PlATFORM?=$(shell go env GOOS)
@@ -62,7 +62,7 @@ local/run: local/build ## Generates the artifact and start the service in the cu
 	./${APP_NAME}
 
 publish: local/check ## Builds and publishes the app
-	GOVERSION=${GOVERSION} BUILD_ENVIRONMENT=${BUILD_ENVIRONMENT} PLUGIN_PATH=${APP_DIR} goreleaser release --clean
+	GOVERSION=${GOVERSION} BUILD_ENVIRONMENT=${BUILD_ENVIRONMENT} PLUGIN_PATH=${APP_DIR} goreleaser release --clean --release-notes docs/releases/v${VERSION}.md
 
 mock/publish: local/check ## Builds and mocks app release
 	GOVERSION=${GOVERSION} BUILD_ENVIRONMENT=${BUILD_ENVIRONMENT} PLUGIN_PATH=${APP_DIR} goreleaser release --skip=publish --clean --snapshot

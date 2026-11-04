@@ -1,5 +1,5 @@
 name: "diff-summary"
-version: "0.0.2"
+version: "0.0.3"
 usage: "Summarizes helm diff output as a Terraform-style deployment plan"
 description: "Reads helm diff output from stdin and renders resource summaries, policy checks, and notifications"
 ignoreFlags: false
