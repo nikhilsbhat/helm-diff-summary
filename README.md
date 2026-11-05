@@ -1,11 +1,11 @@
 # helm-diff-summary
 
 [![CI](https://github.com/nikhilsbhat/helm-diff-summary/actions/workflows/ci.yml/badge.svg)](https://github.com/nikhilsbhat/helm-diff-summary/actions/workflows/ci.yml)
-[![Go Report Card](https://goreportcard.com/badge/github.com/nikhilsbhat/helm-diff-summary)](https://goreportcard.com/report/github.com/nikhilsbhat/helm-diff-summary)
 [![Go Reference](https://pkg.go.dev/badge/github.com/nikhilsbhat/helm-diff-summary.svg)](https://pkg.go.dev/github.com/nikhilsbhat/helm-diff-summary)
 [![License](https://img.shields.io/badge/license-MIT-blue)](https://github.com/nikhilsbhat/helm-diff-summary/blob/main/LICENSE)
 [![Release](https://img.shields.io/github/v/release/nikhilsbhat/helm-diff-summary)](https://github.com/nikhilsbhat/helm-diff-summary/releases)
 [![Downloads](https://img.shields.io/github/downloads/nikhilsbhat/helm-diff-summary/total.svg)](https://github.com/nikhilsbhat/helm-diff-summary/releases)
+[![Artifact Hub](https://img.shields.io/endpoint?url=https://artifacthub.io/badge/repository/helm-diff-summary)](https://artifacthub.io/packages/search?repo=helm-diff-summary)
 
 Review Helm changes like a Terraform plan.
 
